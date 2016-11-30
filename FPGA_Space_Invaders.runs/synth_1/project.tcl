@@ -14,8 +14,8 @@ set_property parent.project_path C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_I
 set_property XPM_LIBRARIES XPM_MEMORY [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
-add_files -quiet c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp
-set_property used_in_implementation false [get_files c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp]
+add_files -quiet C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp
+set_property used_in_implementation false [get_files C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp]
 read_verilog -library xil_defaultlib {
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/vga_timing.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/linedraw.v

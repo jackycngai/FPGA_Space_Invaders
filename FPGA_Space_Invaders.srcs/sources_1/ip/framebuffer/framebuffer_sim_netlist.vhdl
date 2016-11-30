@@ -1,10 +1,10 @@
 -- Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2016.3 (win64) Build 1682563 Mon Oct 10 19:07:27 MDT 2016
--- Date        : Mon Nov 28 22:17:40 2016
--- Host        : THI-ASUS-PC running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim {c:/Users/thile/Dropbox/School Work/EE 178/Labs/Lab
---               8/group2_lab8/group2_lab8.srcs/sources_1/ip/framebuffer/framebuffer_sim_netlist.vhdl}
+-- Tool Version: Vivado v.2016.2 (win64) Build 1577090 Thu Jun  2 16:32:40 MDT 2016
+-- Date        : Tue Nov 29 22:25:00 2016
+-- Host        : DESKTOP-LMNQ5P4 running 64-bit major release  (build 9200)
+-- Command     : write_vhdl -force -mode funcsim
+--               C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer_sim_netlist.vhdl
 -- Design      : framebuffer
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -3453,6 +3453,8 @@ architecture STRUCTURE of framebuffer is
   attribute C_WRITE_WIDTH_B of U0 : label is 8;
   attribute C_XDEVICEFAMILY : string;
   attribute C_XDEVICEFAMILY of U0 : label is "artix7";
+  attribute KEEP_HIERARCHY : string;
+  attribute KEEP_HIERARCHY of U0 : label is "true";
   attribute downgradeipidentifiedwarnings of U0 : label is "yes";
 begin
 U0: entity work.framebuffer_blk_mem_gen_v8_3_4
