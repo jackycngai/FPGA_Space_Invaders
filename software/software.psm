@@ -164,7 +164,7 @@ CONSTANT one             , 01 ; one
                RETURN                              ; return
 
 ;;============================================================================
-;; Subroutine: user_input
+;; Subroutine: user_input Daimen's Part
 ;; This samples the user inputs required for this game (which happens to be
 ;; only the buttons, but this could is extended to the switches as well).
 ;; This subroutine calls an example of how to use the RAM scratchpad, by
