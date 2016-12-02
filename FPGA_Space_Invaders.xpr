@@ -39,7 +39,6 @@
     <Option Name="WTVcsExportSim" Val="1"/>
     <Option Name="WTRivieraExportSim" Val="1"/>
     <Option Name="WTActivehdlExportSim" Val="1"/>
-    <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
   </Configuration>
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
