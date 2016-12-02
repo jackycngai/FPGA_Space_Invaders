@@ -1,0 +1,106 @@
+/*
+
+Vivado v2016.2 (64-bit)
+SW Build 1577090 on Thu Jun  2 16:32:40 MDT 2016
+Process ID: 100884
+
+Current time: 	12/1/16 7:00:18 PM PST
+Time zone: 	Pacific Standard Time (America/Los_Angeles)
+
+OS: Windows 7
+Version: 6.1
+Architecture: amd64
+Available processors (cores): 4
+
+Screen size: 1366x768
+Screen resolution (DPI): 96
+Available screens: 1
+Default font: family=Tahoma,name=Tahoma,style=plain,size=11
+
+Java version: 	1.8.0_66 64-bit
+Java home: 	C:/Xilinx/Vivado/2016.2/tps/win64/jre
+
+User name: 	Thomas
+User home directory: C:/Users/Thomas
+User working directory: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders
+User country: 	US
+User language: 	en
+User locale: 	en_US
+
+RDI Base root directory: C:/Xilinx/Vivado
+RDI Data directory: C:/Xilinx/Vivado/2016.2/data
+RDI Bin directory: C:/Xilinx/Vivado/2016.2/bin
+
+Vivado preferences path: C:/Users/Thomas/AppData/Roaming/Xilinx/Vivado/2016.2/vivado.ini
+Vivado layouts directory: C:/Users/Thomas/AppData/Roaming/Xilinx/Vivado/2016.2/layouts
+
+GUI allocated memory:	187 MB
+GUI max memory:		3,052 MB
+Engine allocated memory: 397 MB
+
+*/
+
+// TclEventType: START_GUI
+// [GUI Memory]: 45 MB (+44649kb) [00:00:26]
+// [Engine Memory]: 361 MB (+227158kb) [00:00:26]
+// Tcl Message: start_gui 
+// TclEventType: PROJECT_OPEN_DIALOG
+// bL:g (cv:JFrame):  Open Project : addNotify
+// Opening Vivado Project: C:\Users\Thomas\Desktop\EE178\FPGA_Space_Invaders\FPGA_Space_Invaders.xpr. Version: Vivado v2016.2 
+// Tcl Message: open_project C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr 
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 398 MB. GUI used memory: 26 MB. Current time: 12/1/16 7:00:19 PM PST
+// TclEventType: MSGMGR_MOVEMSG
+// [Engine Memory]: 398 MB (+19974kb) [00:00:31]
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_CURRENT
+// TclEventType: IP_LOCK_CHANGE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: PROJECT_NEW
+// [Engine Memory]: 461 MB (+45139kb) [00:00:44]
+// [GUI Memory]: 55 MB (+7685kb) [00:00:46]
+// [GUI Memory]: 58 MB (+1095kb) [00:00:52]
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: open_project C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr 
+// Tcl Message: INFO: [Project 1-313] Project file moved from 'C:/Users/Jacky/FPGA_Space_Invaders' since last save. 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2016.2/data/ip'. 
+// HMemoryUtils.trashcanNow. Engine heap size: 490 MB. GUI used memory: 36 MB. Current time: 12/1/16 7:00:44 PM PST
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// [Engine Memory]: 493 MB (+8704kb) [00:00:58]
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// [GUI Memory]: 62 MB (+423kb) [00:01:00]
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Project name: FPGA_Space_Invaders; location: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders; part: xc7a35tcpg236-1
+// Tcl Message: open_project: Time (s): cpu = 00:00:47 ; elapsed = 00:00:31 . Memory (MB): peak = 732.191 ; gain = 80.930 
+dismissDialog("Open Project"); // bL:g (cv:JFrame)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: DG_UPDATE_GRAPH
+// TclEventType: DG_ANALYSIS_MSG_RESET
+// TclEventType: DG_UPDATE_GRAPH
+// TclEventType: DG_ANALYSIS_MSG_RESET
+// TclEventType: DG_UPDATE_GRAPH
+// Tcl Message: update_compile_order -fileset sources_1 
+// PAPropertyPanels.initPanels (project.v) elapsed time: 0.5s
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v)]", 1, true); // z:k (G:JPanel, cv:JFrame) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v)]", 1, true, false, false, false, false, true); // z:k (G:JPanel, cv:JFrame) - Double Click - Node
+collapseTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v)]", 1); // z:k (G:JPanel, cv:JFrame)
+// [Engine Memory]: 518 MB (+427kb) [00:01:10]
+// HMemoryUtils.trashcanNow. Engine heap size: 518 MB. GUI used memory: 37 MB. Current time: 12/1/16 7:01:00 PM PST
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v)]", 1); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v)]", 2, true); // z:k (G:JPanel, cv:JFrame) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v)]", 2, true, false, false, false, false, true); // z:k (G:JPanel, cv:JFrame) - Double Click - Node
+// Elapsed time: 14 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v)]", 2, true); // z:k (G:JPanel, cv:JFrame) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_timing - vga_timing (vga_timing.v)]", 3, false, false, false, false, false, true); // z:k (G:JPanel, cv:JFrame) - Double Click
+// Elapsed time: 10 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_linedraw - linedraw (linedraw.v)]", 5, false); // z:k (G:JPanel, cv:JFrame)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, project (project.v), vga_example_inst - vga_example (vga_example.v), my_linedraw - linedraw (linedraw.v)]", 5, false, false, false, false, false, true); // z:k (G:JPanel, cv:JFrame) - Double Click
+// [GUI Memory]: 65 MB (+28kb) [00:01:51]

@@ -1,0 +1,14 @@
+#-----------------------------------------------------------
+# Vivado v2016.2 (64-bit)
+# SW Build 1577090 on Thu Jun  2 16:32:40 MDT 2016
+# IP Build 1577682 on Fri Jun  3 12:00:54 MDT 2016
+# Start of session at: Thu Dec 01 18:59:01 2016
+# Process ID: 100884
+# Current directory: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent100808 C:\Users\Thomas\Desktop\EE178\FPGA_Space_Invaders\FPGA_Space_Invaders.xpr
+# Log file: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/vivado.log
+# Journal file: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr
+update_compile_order -fileset sources_1

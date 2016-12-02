@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2016.2 (64-bit)
+# SW Build 1577090 on Thu Jun  2 16:32:40 MDT 2016
+# IP Build 1577682 on Fri Jun  3 12:00:54 MDT 2016
+# Start of session at: Thu Dec 01 18:59:01 2016
+# Process ID: 100884
+# Current directory: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent100808 C:\Users\Thomas\Desktop\EE178\FPGA_Space_Invaders\FPGA_Space_Invaders.xpr
+# Log file: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/vivado.log
+# Journal file: C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/Thomas/Desktop/EE178/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr
+INFO: [Project 1-313] Project file moved from 'C:/Users/Jacky/FPGA_Space_Invaders' since last save.
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2016.2/data/ip'.
+WARNING: [IP_Flow 19-2162] IP 'framebuffer' is locked:
+* IP definition 'Block Memory Generator (8.3)' for IP 'framebuffer' has a different revision in the IP Catalog.
+Please select 'Report IP Status' from the 'Tools/Report' menu or run Tcl command 'report_ip_status' for more information.
+open_project: Time (s): cpu = 00:00:47 ; elapsed = 00:00:31 . Memory (MB): peak = 732.191 ; gain = 80.930
+update_compile_order -fileset sources_1
