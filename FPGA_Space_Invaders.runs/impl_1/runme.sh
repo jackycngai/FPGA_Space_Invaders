@@ -24,7 +24,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='C:/Users/Jacky/test/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/impl_1'
+HD_PWD='C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/impl_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log
@@ -41,7 +41,7 @@ EAStep()
 }
 
 # pre-commands:
-/bin/touch .init_design.begin.rst
+/bin/touch .write_bitstream.begin.rst
 EAStep vivado -log project.vdi -applog -m64 -messageDb vivado.pb -mode batch -source project.tcl -notrace
 
 

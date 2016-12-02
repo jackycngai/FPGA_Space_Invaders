@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GenRun Id="synth_1" LaunchPart="xc7a35tcpg236-1" LaunchTime="1480650246">
-  <File Type="PA-TCL" Name="project.tcl"/>
   <File Type="RDS-PROPCONSTRS" Name="project_drc_synth.rpt"/>
+  <File Type="PA-TCL" Name="project.tcl"/>
   <File Type="RDS-RDS" Name="project.vds"/>
   <File Type="RDS-UTIL" Name="project_utilization_synth.rpt"/>
   <File Type="RDS-UTIL-PB" Name="project_utilization_synth.pb"/>
@@ -12,7 +12,7 @@
     <Filter Type="Srcs"/>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab6/linedraw.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab6/linedraw.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab6/linedraw.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -21,7 +21,7 @@
     </File>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab6/vga_timing.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab6/vga_timing.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab6/vga_timing.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -30,7 +30,7 @@
     </File>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/vga_example.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/vga_example.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab8/vga_example.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -39,7 +39,7 @@
     </File>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/kcpsm6.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/kcpsm6.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab8/kcpsm6.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -48,7 +48,7 @@
     </File>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab2/quad_seven_seg.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab2/quad_seven_seg.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab2/quad_seven_seg.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -64,7 +64,7 @@
     </File>
     <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/project.v">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/project.v"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/sources_1/imports/ee178_fall2016_lab8/project.v"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
@@ -81,7 +81,7 @@
     <Filter Type="Constrs"/>
     <File Path="$PSRCDIR/constrs_1/imports/ee178_fall2016_lab8/project.xdc">
       <FileInfo>
-        <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/constrs_1/imports/ee178_fall2016_lab8/project.xdc"/>
+        <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/constrs_1/imports/ee178_fall2016_lab8/project.xdc"/>
         <Attr Name="ImportTime" Val="1480646456"/>
         <Attr Name="UsedIn" Val="synthesis"/>
         <Attr Name="UsedIn" Val="implementation"/>
