@@ -3,10 +3,10 @@
 <!--                                                         -->
 <!-- Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="14" Path="C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr">
+<Project Version="7" Minor="14" Path="C:/Users/Jacky/test/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="a7af9870b57543f892d7c8259e4c90c9"/>
+    <Option Name="Id" Val="01ad82ad24e14fec991f15b6f38db966"/>
     <Option Name="Part" Val="xc7a35tcpg236-1"/>
     <Option Name="CompiledLibDir" Val="$PCACHEDIR/compile_simlib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
@@ -20,7 +20,6 @@
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="EnableCoreContainer" Val="FALSE"/>
-    <Option Name="XPMLibraries" Val="XPM_MEMORY"/>
     <Option Name="CreateRefXciForCoreContainers" Val="FALSE"/>
     <Option Name="IPUserFilesDir" Val="$PPRDIR/FPGA_Space_Invaders.ip_user_files"/>
     <Option Name="IPStaticSourceDir" Val="$PPRDIR/FPGA_Space_Invaders.ip_user_files/ipstatic"/>
@@ -43,26 +42,46 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/imports/ee178_fall2016_lab6/vga_timing.v">
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab6/linedraw.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/Lab 6/lab6_le_thi/lab6_le_thi.srcs/sources_1/imports/ee178_fall2016_lab6/vga_timing.v"/>
-          <Attr Name="ImportTime" Val="1478243031"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab6/linedraw.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/ee178_fall2016_lab6/linedraw.v">
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab6/vga_timing.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/Lab 6/lab6_le_thi/lab6_le_thi.srcs/sources_1/imports/ee178_fall2016_lab6/linedraw.v"/>
-          <Attr Name="ImportTime" Val="1478363637"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab6/vga_timing.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/ee178_fall2016_lab8/vga_example.v">
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/vga_example.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/vga_example.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/kcpsm6.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/kcpsm6.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab2/quad_seven_seg.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab2/quad_seven_seg.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -75,24 +94,10 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/new/quad_seven_seg.v">
+      <File Path="$PSRCDIR/sources_1/imports/imports/ee178_fall2016_lab8/project.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/Lab 2/lab2_le_thi/lab2_le_thi.srcs/sources_1/new/quad_seven_seg.v"/>
-          <Attr Name="ImportTime" Val="1480400265"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/ee178_fall2016_lab8/kcpsm6.v">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/ee178_fall2016_lab8/project.v">
-        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sources_1/imports/ee178_fall2016_lab8/project.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -108,6 +113,8 @@
       <Filter Type="Constrs"/>
       <File Path="$PSRCDIR/constrs_1/imports/ee178_fall2016_lab8/project.xdc">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/constrs_1/imports/ee178_fall2016_lab8/project.xdc"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
         </FileInfo>
@@ -117,18 +124,19 @@
       </Config>
     </FileSet>
     <FileSet Name="sim_1" Type="SimulationSrcs" RelSrcDir="$PSRCDIR/sim_1">
-      <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sim_1/imports/ee178_fall2016_lab6/tiff_writer.v">
+      <File Path="$PSRCDIR/sim_1/imports/imports/ee178_fall2016_lab6/tiff_writer.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/Lab 6/lab6_le_thi/lab6_le_thi.srcs/sim_1/imports/ee178_fall2016_lab6/tiff_writer.v"/>
-          <Attr Name="ImportTime" Val="1477582115"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sim_1/imports/ee178_fall2016_lab6/tiff_writer.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sim_1/imports/ee178_fall2016_lab8/testbench.v">
+      <File Path="$PSRCDIR/sim_1/imports/imports/ee178_fall2016_lab8/testbench.v">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../Desktop/sim_1/imports/ee178_fall2016_lab8/testbench.v"/>
+          <Attr Name="ImportTime" Val="1480646456"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -141,15 +149,12 @@
         <Option Name="TopAutoSet" Val="TRUE"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>
-        <Option Name="SimMode" Val="post-implementation"/>
         <Option Name="SrcSet" Val="sources_1"/>
       </Config>
     </FileSet>
     <FileSet Name="framebuffer" Type="BlockSrcs" RelSrcDir="$PSRCDIR/framebuffer">
       <File Path="$PSRCDIR/sources_1/ip/framebuffer/framebuffer.xci">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../Desktop/FPGA_Space_Invaders/group2_lab8/group2_lab8.srcs/sources_1/ip/framebuffer/framebuffer.xci"/>
-          <Attr Name="ImportTime" Val="1480400186"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -188,21 +193,27 @@
   <Runs Version="1" Minor="10">
     <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016"/>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="framebuffer_synth_1" Type="Ft3:Synth" SrcSet="framebuffer" Part="xc7a35tcpg236-1" ConstrsSet="framebuffer" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/framebuffer_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016"/>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2016">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016"/>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016">
+          <Desc>Default settings for Implementation.</Desc>
+        </StratHandle>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
@@ -217,7 +228,9 @@
     </Run>
     <Run Id="framebuffer_impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcpg236-1" ConstrsSet="framebuffer" Description="Default settings for Implementation." SynthRun="framebuffer_synth_1" IncludeInArchive="false">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016"/>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2016">
+          <Desc>Default settings for Implementation.</Desc>
+        </StratHandle>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
