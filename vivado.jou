@@ -11,3 +11,4 @@
 #-----------------------------------------------------------
 start_guopopen_project {C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders/FPGA_Space_Invaders.xprupupdate_compile_order -fileset sources_1launch_simulation
 source testbench.tcl
+close_sim

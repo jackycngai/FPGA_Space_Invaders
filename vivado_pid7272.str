@@ -160,3 +160,20 @@ maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // V:a (Wo
 // HMemoryUtils.trashcanNow. Engine heap size: 536 MB. GUI used memory: 41 MB. Current time: 12/1/16 6:45:41 PM PST
 // HMemoryUtils.trashcanNow. Engine heap size: 556 MB. GUI used memory: 40 MB. Current time: 12/1/16 6:47:06 PM PST
 // [Engine Memory]: 556 MB (+17987kb) [00:06:40]
+// HMemoryUtils.trashcanNow. Engine heap size: 589 MB. GUI used memory: 40 MB. Current time: 12/1/16 6:51:42 PM PST
+// [Engine Memory]: 589 MB (+5037kb) [00:11:14]
+// [GUI Memory]: 73 MB (+712kb) [00:16:32]
+// Elapsed time: 737 seconds
+selectButton(PAResourceTtoZ.TaskBanner_CLOSE, (String) null); // l:JideButton (JPanel:JComponent, cv:JFrame)
+closeTask("Simulation", "Behavioral Simulation - Functional - sim_1 - testbench", "DesignTask.SIMULATION");
+// TclEventType: WAVEFORM_CLOSE_WCFG
+// TclEventType: SIMULATION_CLOSE_SIMULATION
+// Tcl Message: close_sim 
+// Tcl Message: INFO: [Simtcl 6-16] Simulation closed 
+// Tcl Message: close_sim: Time (s): cpu = 00:00:02 ; elapsed = 00:00:07 . Memory (MB): peak = 834.820 ; gain = 0.000 
+// [GUI Memory]: 78 MB (+1170kb) [00:25:27]
+// [GUI Memory]: 82 MB (+249kb) [00:38:26]
+// HMemoryUtils.trashcanNow. Engine heap size: 604 MB. GUI used memory: 38 MB. Current time: 12/1/16 7:36:41 PM PST
+// [GUI Memory]: 86 MB (+438kb) [01:01:48]
+// HMemoryUtils.trashcanNow. Engine heap size: 604 MB. GUI used memory: 35 MB. Current time: 12/1/16 8:06:43 PM PST
+// HMemoryUtils.trashcanNow. Engine heap size: 604 MB. GUI used memory: 36 MB. Current time: 12/1/16 8:36:46 PM PST
