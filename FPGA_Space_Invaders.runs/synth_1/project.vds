@@ -2,8 +2,8 @@
 # Vivado v2016.2 (64-bit)
 # SW Build 1577090 on Thu Jun  2 16:32:40 MDT 2016
 # IP Build 1577682 on Fri Jun  3 12:00:54 MDT 2016
-# Start of session at: Tue Nov 29 22:25:02 2016
-# Process ID: 2560
+# Start of session at: Thu Dec 01 18:14:02 2016
+# Process ID: 4776
 # Current directory: C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1
 # Command line: vivado.exe -log project.vds -mode batch -messageDb vivado.pb -notrace -source project.tcl
 # Log file: C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/project.vds
@@ -15,9 +15,9 @@ Starting synth_design
 Attempting to get a license for feature 'Synthesis' and/or device 'xc7a35t'
 INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a35t'
 INFO: Launching helper process for spawning children vivado processes
-INFO: Helper process launched with PID 4900 
+INFO: Helper process launched with PID 5984 
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:09 . Memory (MB): peak = 274.703 ; gain = 67.449
+Starting RTL Elaboration : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 277.113 ; gain = 69.172
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-638] synthesizing module 'project' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/project.v:13]
 INFO: [Synth 8-638] synthesizing module 'vga_example' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v:13]
@@ -78,8 +78,8 @@ INFO: [Synth 8-638] synthesizing module 'ODDR' [C:/Xilinx/Vivado/2016.2/scripts/
 INFO: [Synth 8-256] done synthesizing module 'ODDR' (5#1) [C:/Xilinx/Vivado/2016.2/scripts/rt/data/unisim_comp.v:25287]
 INFO: [Synth 8-638] synthesizing module 'vga_timing' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/vga_timing.v:13]
 INFO: [Synth 8-256] done synthesizing module 'vga_timing' (6#1) [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/vga_timing.v:13]
-INFO: [Synth 8-638] synthesizing module 'framebuffer' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-2560-DESKTOP-LMNQ5P4/realtime/framebuffer_stub.v:6]
-INFO: [Synth 8-256] done synthesizing module 'framebuffer' (7#1) [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-2560-DESKTOP-LMNQ5P4/realtime/framebuffer_stub.v:6]
+INFO: [Synth 8-638] synthesizing module 'framebuffer' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-4776-Jacky-PC/realtime/framebuffer_stub.v:6]
+INFO: [Synth 8-256] done synthesizing module 'framebuffer' (7#1) [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-4776-Jacky-PC/realtime/framebuffer_stub.v:6]
 INFO: [Synth 8-226] default block is never used [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v:187]
 INFO: [Synth 8-226] default block is never used [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v:284]
 INFO: [Synth 8-155] case statement is not full and has no default [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v:303]
@@ -493,7 +493,7 @@ INFO: [Synth 8-256] done synthesizing module 'RAMB36E1' (21#1) [C:/Xilinx/Vivado
 INFO: [Synth 8-256] done synthesizing module 'software' (22#1) [C:/Users/Jacky/FPGA_Space_Invaders/software/software.v:54]
 INFO: [Synth 8-256] done synthesizing module 'project' (23#1) [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/project.v:13]
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:08 ; elapsed = 00:00:10 . Memory (MB): peak = 311.969 ; gain = 104.715
+Finished RTL Elaboration : Time (s): cpu = 00:00:09 ; elapsed = 00:00:10 . Memory (MB): peak = 315.418 ; gain = 107.477
 ---------------------------------------------------------------------------------
 
 Report Check Netlist: 
@@ -503,7 +503,7 @@ Report Check Netlist:
 |1     |multi_driven_nets |      0|        0|Passed |Multi driven nets |
 +------+------------------+-------+---------+-------+------------------+
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:08 ; elapsed = 00:00:11 . Memory (MB): peak = 311.969 ; gain = 104.715
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:11 . Memory (MB): peak = 315.418 ; gain = 107.477
 ---------------------------------------------------------------------------------
 WARNING: [Project 1-486] Could not resolve non-primitive black box cell 'framebuffer' instantiated as 'vga_example_inst/my_framebuffer' [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v:142]
 INFO: [Netlist 29-17] Analyzing 191 Unisim elements for replacement
@@ -513,8 +513,8 @@ INFO: [Project 1-570] Preparing netlist for logic optimization
 
 Processing XDC Constraints
 Initializing timing engine
-Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-2560-DESKTOP-LMNQ5P4/dcp/framebuffer_in_context.xdc] for cell 'vga_example_inst/my_framebuffer'
-Finished Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-2560-DESKTOP-LMNQ5P4/dcp/framebuffer_in_context.xdc] for cell 'vga_example_inst/my_framebuffer'
+Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-4776-Jacky-PC/dcp/framebuffer_in_context.xdc] for cell 'vga_example_inst/my_framebuffer'
+Finished Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/.Xil/Vivado-4776-Jacky-PC/dcp/framebuffer_in_context.xdc] for cell 'vga_example_inst/my_framebuffer'
 Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/constrs_1/imports/ee178_fall2016_lab8/project.xdc]
 Finished Parsing XDC File [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/constrs_1/imports/ee178_fall2016_lab8/project.xdc]
 INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/constrs_1/imports/ee178_fall2016_lab8/project.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/project_propImpl.xdc].
@@ -532,22 +532,22 @@ INFO: [Project 1-111] Unisim Transformation Summary:
   RAM256X1S => RAM256X1S (RAMS64E, RAMS64E, RAMS64E, RAMS64E, MUXF7, MUXF7, MUXF8): 8 instances
   RAM32M => RAM32M (RAMS32, RAMS32, RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMD32): 4 instances
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.011 . Memory (MB): peak = 576.586 ; gain = 0.000
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.012 . Memory (MB): peak = 578.422 ; gain = 0.000
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:20 ; elapsed = 00:00:23 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Constraint Validation : Time (s): cpu = 00:00:22 ; elapsed = 00:00:24 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7a35tcpg236-1
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:20 ; elapsed = 00:00:23 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:22 ; elapsed = 00:00:24 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:20 ; elapsed = 00:00:23 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:22 ; elapsed = 00:00:24 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-5546] ROM "b" won't be mapped to RAM because it is too sparse
 INFO: [Synth 8-5546] ROM "b" won't be mapped to RAM because it is too sparse
@@ -557,7 +557,7 @@ INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:20 ; elapsed = 00:00:24 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:23 ; elapsed = 00:00:25 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 
 Report RTL Partitions: 
@@ -680,7 +680,7 @@ BRAMs: 100 (col length: RAMB18 60 RAMB36 30)
 ---------------------------------------------------------------------------------
 Finished Part Resource Summary
 ---------------------------------------------------------------------------------
-Start Parallel Synthesis Optimization  : Time (s): cpu = 00:00:21 ; elapsed = 00:00:24 . Memory (MB): peak = 576.586 ; gain = 369.332
+Start Parallel Synthesis Optimization  : Time (s): cpu = 00:00:23 ; elapsed = 00:00:26 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 Start Cross Boundary Optimization
 ---------------------------------------------------------------------------------
@@ -692,9 +692,9 @@ INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 INFO: [Synth 8-5546] ROM "qssd" won't be mapped to RAM because it is too sparse
 ---------------------------------------------------------------------------------
-Finished Cross Boundary Optimization : Time (s): cpu = 00:00:21 ; elapsed = 00:00:24 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Cross Boundary Optimization : Time (s): cpu = 00:00:23 ; elapsed = 00:00:26 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
-Finished Parallel Reinference  : Time (s): cpu = 00:00:21 ; elapsed = 00:00:24 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Parallel Reinference  : Time (s): cpu = 00:00:23 ; elapsed = 00:00:26 . Memory (MB): peak = 578.422 ; gain = 370.480
 
 Report RTL Partitions: 
 +-+--------------+------------+----------+
@@ -712,9 +712,9 @@ WARNING: [Synth 8-3332] Sequential element (kcpsm6_inst/read_strobe_flop) is unu
 WARNING: [Synth 8-3332] Sequential element (vga_example_inst/my_linedraw/err_reg[15]) is unused and will be removed from module project.
 WARNING: [Synth 8-3332] Sequential element (vga_example_inst/framebuffer_pixelpair_out_sel_reg) is unused and will be removed from module project.
 ---------------------------------------------------------------------------------
-Finished Area Optimization : Time (s): cpu = 00:00:23 ; elapsed = 00:00:27 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Area Optimization : Time (s): cpu = 00:00:26 ; elapsed = 00:00:29 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
-Finished Parallel Area Optimization  : Time (s): cpu = 00:00:23 ; elapsed = 00:00:27 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Parallel Area Optimization  : Time (s): cpu = 00:00:26 ; elapsed = 00:00:29 . Memory (MB): peak = 578.422 ; gain = 370.480
 
 Report RTL Partitions: 
 +-+--------------+------------+----------+
@@ -728,10 +728,10 @@ Start Timing Optimization
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:36 ; elapsed = 00:00:40 . Memory (MB): peak = 576.586 ; gain = 369.332
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:40 ; elapsed = 00:00:43 . Memory (MB): peak = 578.422 ; gain = 370.480
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:38 ; elapsed = 00:00:42 . Memory (MB): peak = 601.410 ; gain = 394.156
+Finished Timing Optimization : Time (s): cpu = 00:00:42 ; elapsed = 00:00:46 . Memory (MB): peak = 603.422 ; gain = 395.480
 ---------------------------------------------------------------------------------
 
 Report RTL Partitions: 
@@ -743,16 +743,16 @@ Report RTL Partitions:
 Start Technology Mapping
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:39 ; elapsed = 00:00:42 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Technology Mapping : Time (s): cpu = 00:00:43 ; elapsed = 00:00:46 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
-Finished Parallel Technology Mapping Optimization  : Time (s): cpu = 00:00:39 ; elapsed = 00:00:42 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Parallel Technology Mapping Optimization  : Time (s): cpu = 00:00:43 ; elapsed = 00:00:46 . Memory (MB): peak = 611.414 ; gain = 403.473
 
 Report RTL Partitions: 
 +-+--------------+------------+----------+
 | |RTL Partition |Replication |Instances |
 +-+--------------+------------+----------+
 +-+--------------+------------+----------+
-Finished Parallel Synthesis Optimization  : Time (s): cpu = 00:00:39 ; elapsed = 00:00:42 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Parallel Synthesis Optimization  : Time (s): cpu = 00:00:43 ; elapsed = 00:00:46 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 Start IO Insertion
 ---------------------------------------------------------------------------------
@@ -769,7 +769,7 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished IO Insertion : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 
 Report Check Netlist: 
@@ -782,7 +782,7 @@ Report Check Netlist:
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 
 Report RTL Partitions: 
@@ -794,25 +794,25 @@ Report RTL Partitions:
 Start Rebuilding User Hierarchy
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Ports
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Ports : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Nets
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Nets : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP and Shift Register Reporting
@@ -884,11 +884,11 @@ Report Instance Areas:
 |7     |    my_timing         |vga_timing     |    77|
 +------+----------------------+---------------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:39 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 5 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:25 ; elapsed = 00:00:31 . Memory (MB): peak = 608.105 ; gain = 136.234
-Synthesis Optimization Complete : Time (s): cpu = 00:00:40 ; elapsed = 00:00:43 . Memory (MB): peak = 608.105 ; gain = 400.852
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:27 ; elapsed = 00:00:35 . Memory (MB): peak = 611.414 ; gain = 139.863
+Synthesis Optimization Complete : Time (s): cpu = 00:00:44 ; elapsed = 00:00:47 . Memory (MB): peak = 611.414 ; gain = 403.473
 INFO: [Project 1-571] Translating synthesized netlist
 INFO: [Netlist 29-17] Analyzing 252 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
@@ -908,6 +908,6 @@ INFO: [Project 1-111] Unisim Transformation Summary:
 INFO: [Common 17-83] Releasing license: Synthesis
 205 Infos, 6 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:39 ; elapsed = 00:00:41 . Memory (MB): peak = 608.105 ; gain = 400.852
-report_utilization: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.027 . Memory (MB): peak = 608.105 ; gain = 0.000
-INFO: [Common 17-206] Exiting Vivado at Tue Nov 29 22:25:48 2016...
+synth_design: Time (s): cpu = 00:00:44 ; elapsed = 00:00:46 . Memory (MB): peak = 611.414 ; gain = 403.473
+report_utilization: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.045 . Memory (MB): peak = 611.414 ; gain = 0.000
+INFO: [Common 17-206] Exiting Vivado at Thu Dec 01 18:14:52 2016...

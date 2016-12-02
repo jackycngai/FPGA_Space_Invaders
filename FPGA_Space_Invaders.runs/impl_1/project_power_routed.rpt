@@ -1,8 +1,8 @@
 Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2016.2 (win64) Build 1577090 Thu Jun  2 16:32:40 MDT 2016
-| Date             : Tue Nov 29 22:27:09 2016
-| Host             : DESKTOP-LMNQ5P4 running 64-bit major release  (build 9200)
+| Date             : Thu Dec 01 18:16:17 2016
+| Host             : Jacky-PC running 64-bit Service Pack 1  (build 7601)
 | Command          : report_power -file project_power_routed.rpt -pb project_power_summary_routed.pb -rpx project_power_routed.rpx
 | Design           : project
 | Device           : xc7a35tcpg236-1
@@ -31,7 +31,7 @@ Table of Contents
 
 +--------------------------+-------+
 | Total On-Chip Power (W)  | 0.212 |
-| Dynamic (W)              | 0.140 |
+| Dynamic (W)              | 0.139 |
 | Device Static (W)        | 0.072 |
 | Effective TJA (C/W)      | 5.0   |
 | Max Ambient (C)          | 83.9  |
@@ -49,7 +49,7 @@ Table of Contents
 +--------------------------+-----------+----------+-----------+-----------------+
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
-| Clocks                   |     0.001 |        5 |       --- |             --- |
+| Clocks                   |    <0.001 |        5 |       --- |             --- |
 | Slice Logic              |     0.001 |     1060 |       --- |             --- |
 |   LUT as Logic           |     0.001 |      413 |     20800 |            1.99 |
 |   LUT as Distributed RAM |    <0.001 |       48 |      9600 |            0.50 |
@@ -58,7 +58,7 @@ Table of Contents
 |   F7/F8 Muxes            |    <0.001 |       27 |     32600 |            0.08 |
 |   LUT as Shift Register  |    <0.001 |        2 |      9600 |            0.02 |
 |   Others                 |     0.000 |       55 |       --- |             --- |
-| Signals                  |     0.002 |      811 |       --- |             --- |
+| Signals                  |     0.002 |      786 |       --- |             --- |
 | Block RAM                |     0.005 |        9 |        50 |           18.00 |
 | MMCM                     |     0.106 |        1 |         5 |           20.00 |
 | I/O                      |     0.024 |       65 |       106 |           61.32 |
@@ -73,7 +73,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) |
 +-----------+-------------+-----------+-------------+------------+
-| Vccint    |       1.000 |     0.020 |       0.010 |      0.010 |
+| Vccint    |       1.000 |     0.019 |       0.009 |      0.010 |
 | Vccaux    |       1.800 |     0.072 |       0.059 |      0.013 |
 | Vcco33    |       3.300 |     0.008 |       0.007 |      0.001 |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |
@@ -144,7 +144,7 @@ Table of Contents
 +---------------------------------------------------------+-----------+
 | Name                                                    | Power (W) |
 +---------------------------------------------------------+-----------+
-| project                                                 |     0.140 |
+| project                                                 |     0.139 |
 |   kcpsm6_inst                                           |     0.002 |
 |     active_interrupt_lut                                |    <0.001 |
 |     address_loop[0].output_data.pc_vector_mux_lut       |    <0.001 |

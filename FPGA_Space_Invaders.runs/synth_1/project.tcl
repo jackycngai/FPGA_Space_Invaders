@@ -20,9 +20,9 @@ read_verilog -library xil_defaultlib {
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/vga_timing.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab6/linedraw.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/vga_example.v
+  C:/Users/Jacky/FPGA_Space_Invaders/software/software.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/new/quad_seven_seg.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/kcpsm6.v
-  C:/Users/Jacky/FPGA_Space_Invaders/software/software.v
   C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/imports/ee178_fall2016_lab8/project.v
 }
 foreach dcp [get_files -quiet -all *.dcp] {
