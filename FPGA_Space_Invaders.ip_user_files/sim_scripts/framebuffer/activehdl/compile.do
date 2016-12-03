@@ -3,24 +3,29 @@ vlib activehdl
 
 vlib activehdl/xil_defaultlib
 vlib activehdl/xpm
-vlib activehdl/blk_mem_gen_v8_3_4
+vlib activehdl/blk_mem_gen_v8_3_3
 
 vmap xil_defaultlib activehdl/xil_defaultlib
 vmap xpm activehdl/xpm
-vmap blk_mem_gen_v8_3_4 activehdl/blk_mem_gen_v8_3_4
+vmap blk_mem_gen_v8_3_3 activehdl/blk_mem_gen_v8_3_3
 
-vlog -work xil_defaultlib  -sv2k12 \
-"C:/Xilinx/Vivado/2016.3/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv" \
+vlog -work xil_defaultlib -v2k5 -sv \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_base.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_dpdistram.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_dprom.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_sdpram.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_spram.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_sprom.sv" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_memory/hdl/xpm_memory_tdpram.sv" \
 
 vcom -work xpm -93 \
-"C:/Xilinx/Vivado/2016.3/data/ip/xpm/xpm_VCOMP.vhd" \
+"C:/Xilinx/Vivado/2016.2/data/ip/xpm/xpm_VCOMP.vhd" \
 
-vlog -work blk_mem_gen_v8_3_4  -v2k5 \
-"../../../ipstatic/simulation/blk_mem_gen_v8_3.v" \
+vlog -work blk_mem_gen_v8_3_3 -v2k5 \
+"../../../ipstatic/blk_mem_gen_v8_3_3/simulation/blk_mem_gen_v8_3.v" \
 
-vlog -work xil_defaultlib  -v2k5 \
-"../../../../group2_lab8.srcs/sources_1/ip/framebuffer/sim/framebuffer.v" \
-
+vlog -work xil_defaultlib -v2k5 \
+"../../../../FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/sim/framebuffer.v" \
 
 vlog -work xil_defaultlib "glbl.v"
 

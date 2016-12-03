@@ -56,8 +56,8 @@ set rc [catch {
   set_property ip_output_repo c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.cache/ip [current_project]
   set_property XPM_LIBRARIES XPM_MEMORY [current_project]
   add_files -quiet C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/synth_1/project.dcp
-  add_files -quiet C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp
-  set_property netlist_only true [get_files C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp]
+  add_files -quiet c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp
+  set_property netlist_only true [get_files c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer.dcp]
   read_xdc -mode out_of_context -ref framebuffer -cells U0 c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer_ooc.xdc
   set_property processing_order EARLY [get_files c:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer_ooc.xdc]
   read_xdc C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/constrs_1/imports/ee178_fall2016_lab8/project.xdc
@@ -122,5 +122,21 @@ if {$rc} {
   return -code error $RESULT
 } else {
   end_step route_design
+}
+
+start_step write_bitstream
+set rc [catch {
+  create_msg_db write_bitstream.pb
+  catch { write_mem_info -force project.mmi }
+  write_bitstream -force project.bit 
+  catch { write_sysdef -hwdef project.hwdef -bitfile project.bit -meminfo project.mmi -file project.sysdef }
+  catch {write_debug_probes -quiet -force debug_nets}
+  close_msg_db -file write_bitstream.pb
+} RESULT]
+if {$rc} {
+  step_failed write_bitstream
+  return -code error $RESULT
+} else {
+  end_step write_bitstream
 }
 

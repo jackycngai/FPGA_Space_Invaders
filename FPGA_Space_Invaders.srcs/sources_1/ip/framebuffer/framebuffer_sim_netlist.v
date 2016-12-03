@@ -1,10 +1,10 @@
 // Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2016.2 (win64) Build 1577090 Thu Jun  2 16:32:40 MDT 2016
-// Date        : Thu Dec 01 18:14:00 2016
+// Date        : Thu Dec 01 19:41:00 2016
 // Host        : Jacky-PC running 64-bit Service Pack 1  (build 7601)
 // Command     : write_verilog -force -mode funcsim
-//               C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer_sim_netlist.v
+//               c:/Users/Jacky/test/FPGA_Space_Invaders/FPGA_Space_Invaders.srcs/sources_1/ip/framebuffer/framebuffer_sim_netlist.v
 // Design      : framebuffer
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -12,7 +12,7 @@
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "framebuffer,blk_mem_gen_v8_3_4,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_3_4,Vivado 2016.3" *) 
+(* CHECK_LICENSE_TYPE = "framebuffer,blk_mem_gen_v8_3_3,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_3_3,Vivado 2016.2" *) 
 (* NotValidForBitStream *)
 module framebuffer
    (clka,
@@ -141,7 +141,7 @@ module framebuffer
   (* C_XDEVICEFAMILY = "artix7" *) 
   (* KEEP_HIERARCHY = "true" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
-  framebuffer_blk_mem_gen_v8_3_4 U0
+  framebuffer_blk_mem_gen_v8_3_3 U0
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -3149,8 +3149,8 @@ endmodule
 (* C_USE_URAM = "0" *) (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) 
 (* C_WRITE_DEPTH_A = "65536" *) (* C_WRITE_DEPTH_B = "32768" *) (* C_WRITE_MODE_A = "READ_FIRST" *) 
 (* C_WRITE_MODE_B = "READ_FIRST" *) (* C_WRITE_WIDTH_A = "4" *) (* C_WRITE_WIDTH_B = "8" *) 
-(* C_XDEVICEFAMILY = "artix7" *) (* ORIG_REF_NAME = "blk_mem_gen_v8_3_4" *) (* downgradeipidentifiedwarnings = "yes" *) 
-module framebuffer_blk_mem_gen_v8_3_4
+(* C_XDEVICEFAMILY = "artix7" *) (* ORIG_REF_NAME = "blk_mem_gen_v8_3_3" *) (* downgradeipidentifiedwarnings = "yes" *) 
+module framebuffer_blk_mem_gen_v8_3_3
    (clka,
     rsta,
     ena,
@@ -3354,7 +3354,7 @@ module framebuffer_blk_mem_gen_v8_3_4
   assign sbiterr = \<const0> ;
   GND GND
        (.G(\<const0> ));
-  framebuffer_blk_mem_gen_v8_3_4_synth inst_blk_mem_gen
+  framebuffer_blk_mem_gen_v8_3_3_synth inst_blk_mem_gen
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -3367,8 +3367,8 @@ module framebuffer_blk_mem_gen_v8_3_4
         .web(web));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_3_4_synth" *) 
-module framebuffer_blk_mem_gen_v8_3_4_synth
+(* ORIG_REF_NAME = "blk_mem_gen_v8_3_3_synth" *) 
+module framebuffer_blk_mem_gen_v8_3_3_synth
    (douta,
     doutb,
     clka,
