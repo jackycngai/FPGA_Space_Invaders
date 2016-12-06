@@ -73,7 +73,7 @@ NAMEREG s3, gs_tbullety
 NAMEREG s4, gs_tbulletdy
 CONSTANT gs_tbullet_xdim  , 00 ; it's this plus 1
 CONSTANT gs_tbullet_ydim  , 05 ; it's this plus 1
-CONSTANT gs_tbullet_speed , 06 ; pixels per frame
+CONSTANT gs_tbullet_speed , 08 ; pixels per frame
 
 NAMEREG s5, gs_tankx
 CONSTANT gs_tanky        , f4 ; tank y location
@@ -494,17 +494,17 @@ draw_playing:
 		LOAD xpos, shield1x			; draw shield 1 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 0a
+		ADD xpos, 09
 		CALL drawto
 		LOAD xpos, shield1x			; draw shield 1 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield1x			; draw shield 1 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield1x			; draw shield 1 side 6
 		LOAD ypos, shieldy
@@ -534,17 +534,17 @@ draw_playing:
 		LOAD xpos, shield2x			; draw shield 2 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 0a
+		ADD xpos, 09
 		CALL drawto
 		LOAD xpos, shield2x			; draw shield 2 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield2x			; draw shield 2 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield2x			; draw shield 2 side 6
 		LOAD ypos, shieldy
@@ -574,17 +574,17 @@ draw_playing:
 		LOAD xpos, shield3x			; draw shield 3 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 0a
+		ADD xpos, 09
 		CALL drawto
 		LOAD xpos, shield3x			; draw shield 3 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield3x			; draw shield 3 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield3x			; draw shield 3 side 6
 		LOAD ypos, shieldy
@@ -614,17 +614,17 @@ draw_playing:
 		LOAD xpos, shield4x			; draw shield 4 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 0a
+		ADD xpos, 09
 		CALL drawto
 		LOAD xpos, shield4x			; draw shield 4 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield4x			; draw shield 4 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
-		ADD xpos, 10
+		ADD xpos, 0f
 		CALL drawto
 		LOAD xpos, shield4x			; draw shield 4 side 6
 		LOAD ypos, shieldy
