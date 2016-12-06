@@ -6,10 +6,12 @@
 
 ;;============================================================================
 ;; Editor: Thi Le
-;; Current Version: 1.2
+;; Current Version: 1.4
 ;; Change Log: 1.0 - initial file provided
 ;;			   1.1 - replaced padl with tank and cleaned up code
-;;			   1.2 - added in bullet and bullet shooting
+;;			   1.2 - added in bullet, bullet shooting, and bullet resetting
+;;			   1.3 - added in shield drawings
+;;			   1.4 - 
 ;;============================================================================
 
 ;;============================================================================
@@ -66,14 +68,14 @@ CONSTANT gs_minor_twosec , 78 ; frame count about 2.0 secs
 CONSTANT gs_minor_onesec , 3c ; frame count about 1.0 secs
 CONSTANT gs_minor_getrdy , 1e ; frame count about 0.5 secs
 
-NAMEREG s2, gs_bulletx
-NAMEREG s3, gs_bullety
-NAMEREG s5, gs_bulletdy
-CONSTANT gs_bullet_xdim  , 00 ; it's this plus 1
-CONSTANT gs_bullet_ydim  , 05 ; it's this plus 1
-CONSTANT gs_bullet_speed , 06 ; pixels per frame
+NAMEREG s2, gs_tbulletx
+NAMEREG s3, gs_tbullety
+NAMEREG s4, gs_tbulletdy
+CONSTANT gs_tbullet_xdim  , 00 ; it's this plus 1
+CONSTANT gs_tbullet_ydim  , 05 ; it's this plus 1
+CONSTANT gs_tbullet_speed , 06 ; pixels per frame
 
-NAMEREG s6, gs_tankx
+NAMEREG s5, gs_tankx
 CONSTANT gs_tanky        , f4 ; tank y location
 CONSTANT gs_tank_xdim    , 10 ; it's this plus 1
 CONSTANT gs_tank_ydim    , 08 ; it's this plus 1
@@ -83,14 +85,14 @@ CONSTANT gs_tank_speed   , 02 ; pixels per frame
 ;; Global variables.
 ;;============================================================================
 
-NAMEREG s4, resvd0            ; reserved
+NAMEREG s6, resvd0            ; reserved
 NAMEREG s7, resvd1            ; reserved
 NAMEREG s8, resvd2            ; reserved
+NAMEREG sC, resvd3            ; reserved
 
 NAMEREG s9, xpos              ; for drawing routines
 NAMEREG sA, ypos              ; for drawing routines
-NAMEREG sB, bullet_en		  ; for bullet enable
-NAMEREG sC, swhsamp           ; switch hi sample
+NAMEREG sB, tbullet_en		  ; for bullet enable
 NAMEREG sD, btnsamp           ; button sample
 NAMEREG sE, loopvar           ; for loops
 NAMEREG sF, scratch           ; for scratch
@@ -104,22 +106,32 @@ CONSTANT minusmax        , 80 ; minus 128
 CONSTANT plusmax         , 7f ; plus 127
 CONSTANT zero            , 00 ; zero
 CONSTANT one             , 01 ; one
+CONSTANT shieldhp        , 08 ; shield health is 8
+CONSTANT shieldxdim      , 18 ; shield x dimension is 24 pixels
+CONSTANT shieldydim		 , 14 ; shield y dimension is 20 pixels
+CONSTANT shield1x		 , 10 ; shield 1 starts at x = 16
+CONSTANT shield2x		 , 52 ; shield 2 starts at x = 82
+CONSTANT shield3x		 , 95 ; shield 3 starts at x = 149
+CONSTANT shield4x		 , d7 ; shield 4 starts at x = 215
+CONSTANT shieldy		 , e0 ; shield starts at y = 224
 
 ;;============================================================================
 ;; Boot.
 ;; This performs one-time initialization of the hardware and the game state.
 ;;============================================================================
 
-         boot: CALL hw_init                        ; initial hardware setup
-               CALL gs_init                        ; set initial game state
-               ENABLE INTERRUPT                    ; enable vblnk interrupt
+boot:
+		CALL hw_init							; initial hardware setup
+		CALL gs_init							; set initial game state
+		ENABLE INTERRUPT						; enable vblnk interrupt
 
 ;;============================================================================
 ;; Main.
 ;; This is an empty loop, does nothing, waiting for interrupts to occur.
 ;;============================================================================
 
-         main: JUMP main                           ; empty loop, does nothing
+main:
+		JUMP main								; empty loop, does nothing
 
 ;;============================================================================
 ;; Interrupt.
@@ -128,10 +140,11 @@ CONSTANT one             , 01 ; one
 ;; state on the display.
 ;;============================================================================
 
-          isr: CALL user_input                     ; get the user input
-               CALL calc_next_gs                   ; calculate next state
-               CALL draw_gs                        ; draw the state
-               RETURNI ENABLE                      ; return with enable
+isr:
+		CALL user_input						; get the user input
+		CALL calc_next_gs						; calculate next state
+		CALL draw_gs							; draw the state
+		RETURNI ENABLE						; return with enable
 
 ;;============================================================================
 ;; Subroutine: hw_init
@@ -140,20 +153,22 @@ CONSTANT one             , 01 ; one
 ;; called from other routines, as a subroutine).
 ;;============================================================================
 
-      hw_init: LOAD scratch, zero                  ; going to use lot of zero
-               OUTPUT scratch, leds_lo             ; turn off lo leds
-               OUTPUT scratch, leds_hi             ; turn off hi leds
-               OUTPUT scratch, qssd_lo             ; zeroize qssd lo
-               OUTPUT scratch, qssd_hi             ; zeroize qssd hi
-               OUTPUT scratch, qssd_dp             ; turn off qssd dots
-               LOAD scratch, mode_exp              ; load desired mode
-               OUTPUT scratch, mode                ; program the framebuffer
-               LOAD scratch, beam_hi               ; load desired beam
-               OUTPUT scratch, beam                ; program the framebuffer
- hw_init_wait: INPUT scratch, busy                 ; get framebuffer busy
-               COMPARE scratch, busy_go            ; check framebuffer busy
-               JUMP Z, hw_init_wait                ; back to wait if busy
-               RETURN                              ; return
+hw_init:
+		LOAD scratch, zero						; going to use lot of zero
+		OUTPUT scratch, leds_lo				; turn off lo leds
+		OUTPUT scratch, leds_hi				; turn off hi leds
+		OUTPUT scratch, qssd_lo				; zeroize qssd lo
+		OUTPUT scratch, qssd_hi				; zeroize qssd hi
+		OUTPUT scratch, qssd_dp				; turn off qssd dots
+		LOAD scratch, mode_exp					; load desired mode
+		OUTPUT scratch, mode					; program the framebuffer
+		LOAD scratch, beam_hi					; load desired beam
+		OUTPUT scratch, beam					; program the framebuffer
+hw_init_wait:
+		INPUT scratch, busy					; get framebuffer busy
+		COMPARE scratch, busy_go				; check framebuffer busy
+		JUMP Z, hw_init_wait					; back to wait if busy
+		RETURN								; return
 
 ;;============================================================================
 ;; Subroutine: gs_init
@@ -162,14 +177,15 @@ CONSTANT one             , 01 ; one
 ;; really matter based on design of the game state machine.
 ;;============================================================================
 
-      gs_init: LOAD gs_major, gs_major_attrone     ; start in attract mdoe
-               LOAD gs_minor, gs_minor_begins      ; start with counter zero
-               LOAD gs_bulletx, zero               ; doesn't really matter
-               LOAD gs_bullety, zero               ; doesn't really matter
-               LOAD gs_tankx, zero                 ; doesn't really matter
-               LOAD gs_bulletdy, zero              ; doesn't really matter
-			   LOAD bullet_en, zero
-               RETURN                              ; return
+gs_init:
+		LOAD gs_major, gs_major_attrone		; start in attract mdoe
+		LOAD gs_minor, gs_minor_begins			; start with counter zero
+		LOAD gs_tbulletx, zero					; doesn't really matter
+		LOAD gs_tbullety, zero					; doesn't really matter
+		LOAD gs_tankx, zero					; doesn't really matter
+		LOAD gs_tbulletdy, zero				; doesn't really matter
+		LOAD tbullet_en, zero					; start with top button not pressed
+		RETURN								; return
 
 ;;============================================================================
 ;; Subroutine: user_input
@@ -181,19 +197,9 @@ CONSTANT one             , 01 ; one
 ;; can be entirely removed as it is not needed in this game.
 ;;============================================================================
 
-   user_input: INPUT btnsamp, buttons              ; sample button hardware
-              ;INPUT swlsamp, switches_lo          ; sample switch lo hardware
-              ;INPUT swhsamp, switches_hi          ; sample switch hi hardware
-              ;CALL ram_example                    ; do the ram example
-               RETURN                              ; return
-
-  ; ram_example: OUTPUT swhsamp, qssd_hi             ; display ram address
-               ; FETCH scratch, (swhsamp)            ; read the ram at addr
-               ; OUTPUT scratch, qssd_lo             ; display data from ram
-               ; TEST btnsamp, buttons_dn            ; does user want to write
-               ; RETURN Z                            ; if not then return
-               ; STORE swlsamp, (swhsamp)            ; write the ram at addr
-               ; RETURN                              ; return
+user_input:
+		INPUT btnsamp, buttons					; sample button hardware
+		RETURN								; return
 
 ;;============================================================================
 ;; Subroutine: calc_next_gs
@@ -201,113 +207,130 @@ CONSTANT one             , 01 ; one
 ;; inputs and the current state of the game.
 ;;============================================================================
 
-   calc_next_gs: COMPARE gs_major, gs_major_attrone  ; are we in attrone?
-                 JUMP Z, calc_attrone                 ; do ns calc for attrone
-                 COMPARE gs_major, gs_major_attrtwo  ; are we in attrtwo?
-                 JUMP Z, calc_attrtwo                 ; do ns calc for attrtwo
-                 COMPARE gs_major, gs_major_playing  ; are we in playing?
-                 JUMP Z, calc_playing                 ; do ns calc for playing
-                 COMPARE gs_major, gs_major_gameend  ; are we in gameend?
-                 JUMP Z, calc_gameend                 ; do ns calc for gameend
-                 RETURN
+calc_next_gs:
+		COMPARE gs_major, gs_major_attrone	; are we in attrone?
+		JUMP Z, calc_attrone					; do ns calc for attrone
+		COMPARE gs_major, gs_major_attrtwo	; are we in attrtwo?
+		JUMP Z, calc_attrtwo					; do ns calc for attrtwo
+		COMPARE gs_major, gs_major_playing 	; are we in playing?
+		JUMP Z, calc_playing					; do ns calc for playing
+		COMPARE gs_major, gs_major_gameend 	; are we in gameend?
+		JUMP Z, calc_gameend					; do ns calc for gameend
+		RETURN
 
-   calc_attrone: TEST btnsamp, buttons_ct             ; starts game if center button is pressed
-                 JUMP NZ, goto_playing                ; othersize, swap between bong and ec
-                 COMPARE gs_minor, gs_minor_twosec   ; attrone is bong, attrtwo is ec
-                 JUMP Z, goto_attrtwo
-                 ADD gs_minor, one
-                 RETURN
+calc_attrone:
+		TEST btnsamp, buttons_ct				; starts game if center button is pressed
+		JUMP NZ, initial_positions				; othersize, swap between bong and ec
+		COMPARE gs_minor, gs_minor_twosec 	; attrone is bong, attrtwo is ec
+		JUMP Z, goto_attrtwo
+		ADD gs_minor, one
+		RETURN
 
-   calc_attrtwo: TEST btnsamp, buttons_ct
-                 JUMP NZ, goto_playing
-                 COMPARE gs_minor, gs_minor_onesec
-                 JUMP Z, goto_attrone
-                 ADD gs_minor, one
-                 RETURN
-				 
-   goto_playing: LOAD gs_tankx, gs_tank_xdim			; start tank at the bottom horizontal center of screen
-                 SRX gs_tankx
-                 XOR gs_tankx, minusone
-                 ADD gs_tankx, one
-                 ADD gs_tankx, minusmax
-				 LOAD scratch, gs_tankx				; start bullet at the upper center of the tank
-			     ADD scratch, 08
-                 LOAD gs_bulletx, scratch
-			     LOAD scratch, gs_tanky
-			     SUB scratch, 03
-			     LOAD gs_bullety, scratch
-			     LOAD gs_major, gs_major_playing
-                 LOAD gs_minor, gs_minor_begins
-			     RETURN
+calc_attrtwo:
+		TEST btnsamp, buttons_ct
+		JUMP NZ, initial_positions
+		COMPARE gs_minor, gs_minor_onesec
+		JUMP Z, goto_attrone
+		ADD gs_minor, one
+		RETURN
 
-   calc_playing: CALL upd_tank							; go to update tank position
-				 TEST btnsamp, buttons_up				; check if the top button was pushed
-				 CALL NZ, load_bullet_en				; if it was, enable bullet enable
-				 COMPARE bullet_en, zero				; check if bullet enable is enabled
-				 CALL NZ, upd_bullet					; if it is, update shot bullet position
-				 RETURN
-				 
-       upd_tank: LOAD scratch, zero					; update tank position
-                 TEST btnsamp, buttons_lf
-                 SUBCY scratch, zero
-                 TEST btnsamp, buttons_rt
-                 ADDCY scratch, zero
-                 COMPARE scratch, minusone
-                 CALL Z, upd_tank_lt
-                 COMPARE scratch, one
-                 CALL Z, upd_tank_rt
-				 COMPARE bullet_en, zero				; if bullet enable is 0, update unshot bullet x position
-				 RETURN NZ							; if bullet enable is 1, do not update bullet x position
-				 LOAD scratch, gs_tankx				; update unshot bullet x position
-				 ADD scratch, 08
-                 LOAD gs_bulletx, scratch
-                 RETURN
-    upd_tank_lt: SUB gs_tankx, gs_tank_speed
-                 RETURN NC
-                 LOAD gs_tankx, zero
-                 RETURN
-    upd_tank_rt: ADD gs_tankx, gs_tank_speed
-                 LOAD scratch, gs_tankx
-                 ADD scratch, gs_tank_xdim
-                 RETURN NC
-                 LOAD gs_tankx, minusone
-                 SUB gs_tankx, gs_tank_xdim
-                 RETURN
+initial_positions:
+		LOAD gs_tankx, gs_tank_xdim			; start tank at the bottom horizontal center of screen
+		SRX gs_tankx
+		XOR gs_tankx, minusone
+		ADD gs_tankx, one
+		ADD gs_tankx, minusmax
+		LOAD scratch, gs_tankx					; start bullet at the upper center of the tank
+		ADD scratch, 08
+		LOAD gs_tbulletx, scratch
+		LOAD scratch, gs_tanky
+		SUB scratch, 03
+		LOAD gs_tbullety, scratch
+		LOAD gs_major, gs_major_playing
+		LOAD gs_minor, gs_minor_begins
+		RETURN
 
- load_bullet_en: LOAD bullet_en, one					; enable bullet enable
-				 RETURN
-				 
-	 upd_bullet: LOAD loopvar, gs_bullet_speed			; loop for bullety moving up
-upd_bullet_loop: SUB loopvar, one
-				 RETURN C								; needed for some reason I do not know
-				 SUB gs_bullety, one
-                 JUMP Z, reset_bullet
-				 JUMP upd_bullet_loop
-   reset_bullet: LOAD scratch, gs_tankx				; when bullet hits the top, reload the bullet position
-				 ADD scratch, 08
-                 LOAD gs_bulletx, scratch
-				 LOAD scratch, gs_tanky
-				 SUB scratch, 03
-				 LOAD gs_bullety, scratch
-				 LOAD bullet_en, zero
-				 RETURN
+calc_playing:
+		CALL upd_tank							; go to update tank position
+		TEST btnsamp, buttons_up				; check if the top button was pushed
+		CALL NZ, load_tbullet_en				; if it was, enable bullet enable
+		COMPARE tbullet_en, zero				; check if bullet enable is enabled
+		CALL NZ, upd_tbullet					; if it is, update shot bullet position
+		;CALL upd_aliens
+		RETURN
 
-   calc_gameend: COMPARE gs_minor, gs_minor_onesec
-                 JUMP Z, goto_attrone
-                 ADD gs_minor, one
-                 RETURN
+upd_tank:
+		LOAD scratch, zero						; update tank position
+		TEST btnsamp, buttons_lf
+		SUBCY scratch, zero
+		TEST btnsamp, buttons_rt
+		ADDCY scratch, zero
+		COMPARE scratch, minusone
+		CALL Z, upd_tank_lt
+		COMPARE scratch, one
+		CALL Z, upd_tank_rt
+		COMPARE tbullet_en, zero				; if bullet enable is 0, update unshot bullet x position
+		RETURN NZ								; if bullet enable is 1, do not update bullet x position
+		LOAD scratch, gs_tankx					; update unshot bullet x position
+		ADD scratch, 08
+		LOAD gs_tbulletx, scratch
+		RETURN
+upd_tank_lt:
+		SUB gs_tankx, gs_tank_speed
+		RETURN NC
+		LOAD gs_tankx, zero
+		RETURN
+upd_tank_rt:
+		ADD gs_tankx, gs_tank_speed
+		LOAD scratch, gs_tankx
+		ADD scratch, gs_tank_xdim
+		RETURN NC
+		LOAD gs_tankx, minusone
+		SUB gs_tankx, gs_tank_xdim
+		RETURN
 
-   goto_attrone: LOAD gs_major, gs_major_attrone
-			     LOAD gs_minor, gs_minor_begins
-                 RETURN
+load_tbullet_en:
+		LOAD tbullet_en, one					; enable bullet enable
+		RETURN
 
-   goto_attrtwo: LOAD gs_major, gs_major_attrtwo
-                 LOAD gs_minor, gs_minor_begins
-                 RETURN
+upd_tbullet:
+		LOAD loopvar, gs_tbullet_speed			; loop for bullety moving up
+upd_tbullet_loop:
+		SUB loopvar, one
+		RETURN C								; needed for some reason I do not know... yet
+		SUB gs_tbullety, one
+		JUMP Z, reset_tbullet
+		JUMP upd_tbullet_loop
+reset_tbullet:
+		LOAD scratch, gs_tankx					; when bullet hits the top, reload the bullet position
+		ADD scratch, 08
+		LOAD gs_tbulletx, scratch
+		LOAD scratch, gs_tanky
+		SUB scratch, 03
+		LOAD gs_tbullety, scratch
+		LOAD tbullet_en, zero
+		RETURN
 
-   goto_gameend: LOAD gs_major, gs_major_gameend
-                 LOAD gs_minor, gs_minor_begins
-                 RETURN
+calc_gameend:
+		COMPARE gs_minor, gs_minor_onesec
+		JUMP Z, goto_attrone
+		ADD gs_minor, one
+		RETURN
+
+goto_attrone:
+		LOAD gs_major, gs_major_attrone
+		LOAD gs_minor, gs_minor_begins
+		RETURN
+
+goto_attrtwo:
+		LOAD gs_major, gs_major_attrtwo
+		LOAD gs_minor, gs_minor_begins
+		RETURN
+
+goto_gameend:
+		LOAD gs_major, gs_major_gameend
+		LOAD gs_minor, gs_minor_begins
+		RETURN
 
 ;;============================================================================
 ;; Subroutine: draw_gs
@@ -317,198 +340,365 @@ upd_bullet_loop: SUB loopvar, one
 ;; routine itself) can be entirely remove as it is required to play the game.
 ;;============================================================================
 
-      draw_gs: CALL draw_gs_debug                  ; for debug info display
-               COMPARE gs_major, gs_major_attrone  ; are we in attrone?
-               JUMP Z, draw_attrone                ; do drawing for attrone
-               COMPARE gs_major, gs_major_attrtwo  ; are we in attrtwo?
-               JUMP Z, draw_attrtwo                ; do drawing for attrtwo
-               COMPARE gs_major, gs_major_playing  ; are we in playing?
-               JUMP Z, draw_playing                ; do drawing for playing
-               COMPARE gs_major, gs_major_gameend  ; are we in gameend?
-               JUMP Z, draw_gameend                ; do drawing for gameend
-               RETURN                              ; return
+draw_gs:
+		CALL draw_gs_debug                  ; for debug info display
+		COMPARE gs_major, gs_major_attrone  ; are we in attrone?
+		JUMP Z, draw_attrone                ; do drawing for attrone
+		COMPARE gs_major, gs_major_attrtwo  ; are we in attrtwo?
+		JUMP Z, draw_attrtwo                ; do drawing for attrtwo
+		COMPARE gs_major, gs_major_playing  ; are we in playing?
+		JUMP Z, draw_playing                ; do drawing for playing
+		COMPARE gs_major, gs_major_gameend  ; are we in gameend?
+		JUMP Z, draw_gameend                ; do drawing for gameend
+		RETURN                              ; return
 
-draw_gs_debug: OUTPUT gs_major, leds_hi            ; debug display on leds
-               OUTPUT gs_minor, leds_lo            ; debug display on leds
-               RETURN                              ; return
+draw_gs_debug:
+		OUTPUT gs_major, leds_hi            ; debug display on leds
+		OUTPUT gs_minor, leds_lo            ; debug display on leds
+		RETURN                              ; return
 
- draw_attrone: LOAD xpos, 28 ; draw letter b
-               LOAD ypos, 50
-               CALL moveto
-               LOAD xpos, 28
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58 ; draw letter o
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88 ; draw letter n
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, b8 ; draw letter g
-               LOAD ypos, b0
-               CALL moveto
-               LOAD xpos, d8
-               LOAD ypos, b0
-               CALL drawto
-               LOAD xpos, d8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, d8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN
+draw_attrone:
+		LOAD xpos, 28					; draw letter b
+		LOAD ypos, 50
+		CALL moveto
+		LOAD xpos, 28
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 48
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 48
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 28
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 58					; draw letter o
+		LOAD ypos, 70
+		CALL moveto
+		LOAD xpos, 58
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 78
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 78
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 58
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 88					; draw letter n
+		LOAD ypos, 90
+		CALL moveto
+		LOAD xpos, 88
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, a8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, a8
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, b8					; draw letter g
+		LOAD ypos, b0
+		CALL moveto
+		LOAD xpos, d8
+		LOAD ypos, b0
+		CALL drawto
+		LOAD xpos, d8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, b8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, b8
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, d8
+		LOAD ypos, 90
+		CALL drawto
+		RETURN
 
- draw_attrtwo: LOAD xpos, 78 ; draw letter e
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, a8 ; draw letter c
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN
+draw_attrtwo:
+		LOAD xpos, 78					; draw letter e
+		LOAD ypos, 90
+		CALL moveto
+		LOAD xpos, 58
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 58
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 78
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 58
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, a8					; draw letter c
+		LOAD ypos, 70
+		CALL moveto
+		LOAD xpos, 88
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 88
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, a8
+		LOAD ypos, 90
+		CALL drawto
+		RETURN
 
- draw_playing: LOAD xpos, gs_bulletx ; draw bullet
-               LOAD ypos, gs_bullety
-               CALL moveto
-               LOAD xpos, gs_bulletx
-               LOAD ypos, gs_bullety
-               ADD ypos, gs_bullet_ydim
-               CALL drawto
-               LOAD xpos, gs_tankx ; draw tank
-               LOAD ypos, gs_tanky
-               CALL moveto
-               LOAD xpos, gs_tankx
-               LOAD ypos, gs_tanky
-               ADD ypos, gs_tank_ydim
-               CALL drawto
-               LOAD xpos, gs_tankx
-               LOAD ypos, gs_tanky
-               ADD xpos, gs_tank_xdim
-               ADD ypos, gs_tank_ydim
-               CALL drawto
-               LOAD xpos, gs_tankx
-               LOAD ypos, gs_tanky
-               ADD xpos, gs_tank_xdim
-               CALL drawto
-               LOAD xpos, gs_tankx
-               LOAD ypos, gs_tanky
-               CALL drawto			   
-               RETURN
+draw_playing:
+		LOAD xpos, gs_tbulletx			; draw bullet
+		LOAD ypos, gs_tbullety
+		CALL moveto
+		LOAD xpos, gs_tbulletx
+		LOAD ypos, gs_tbullety
+		ADD ypos, gs_tbullet_ydim
+		CALL drawto
+		
+		LOAD xpos, gs_tankx			; draw tank
+		LOAD ypos, gs_tanky
+		CALL moveto
+		LOAD xpos, gs_tankx
+		LOAD ypos, gs_tanky
+		ADD ypos, gs_tank_ydim
+		CALL drawto
+		LOAD xpos, gs_tankx
+		LOAD ypos, gs_tanky
+		ADD xpos, gs_tank_xdim
+		ADD ypos, gs_tank_ydim
+		CALL drawto
+		LOAD xpos, gs_tankx
+		LOAD ypos, gs_tanky
+		ADD xpos, gs_tank_xdim
+		CALL drawto
+		LOAD xpos, gs_tankx
+		LOAD ypos, gs_tanky
+		CALL drawto
+		
+		LOAD xpos, shield1x			; draw shield 1
+		LOAD ypos, shieldy
+		CALL moveto
+		LOAD xpos, shield1x			; draw shield 1 side 1
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 2
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 09
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 3
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 0a
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 4
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 5
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 6
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 7
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		CALL drawto
+		LOAD xpos, shield1x			; draw shield 1 side 8
+		LOAD ypos, shieldy
+		CALL drawto
+		
+		LOAD xpos, shield2x			; draw shield 2
+		LOAD ypos, shieldy
+		CALL moveto
+		LOAD xpos, shield2x			; draw shield 2 side 1
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 2
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 09
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 3
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 0a
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 4
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 5
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 6
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 7
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		CALL drawto
+		LOAD xpos, shield2x			; draw shield 2 side 8
+		LOAD ypos, shieldy
+		CALL drawto
+		
+		LOAD xpos, shield3x			; draw shield 3
+		LOAD ypos, shieldy
+		CALL moveto
+		LOAD xpos, shield3x			; draw shield 3 side 1
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 2
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 09
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 3
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 0a
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 4
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 5
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 6
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 7
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		CALL drawto
+		LOAD xpos, shield3x			; draw shield 3 side 8
+		LOAD ypos, shieldy
+		CALL drawto
+		
+		LOAD xpos, shield4x			; draw shield 4
+		LOAD ypos, shieldy
+		CALL moveto
+		LOAD xpos, shield4x			; draw shield 4 side 1
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 2
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 09
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 3
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 0a
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 4
+		LOAD ypos, shieldy
+		SUB ypos, 0e
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 5
+		LOAD ypos, shieldy
+		SUB ypos, shieldydim
+		ADD xpos, 10
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 6
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		SUB ypos, shieldydim
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 7
+		LOAD ypos, shieldy
+		ADD xpos, shieldxdim
+		CALL drawto
+		LOAD xpos, shield4x			; draw shield 4 side 8
+		LOAD ypos, shieldy
+		CALL drawto
+		RETURN
 
- draw_gameend: LOAD xpos, 48 ; draw letter d
-               LOAD ypos, 50
-               CALL moveto
-               LOAD xpos, 48
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58 ; draw letter o
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88 ; draw letter n
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, d8 ; draw letter e
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, b8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, d8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN
+draw_gameend:
+		LOAD xpos, 48					; draw letter d
+		LOAD ypos, 50
+		CALL moveto
+		LOAD xpos, 48
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 28
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 28
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 48
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 58					; draw letter o
+		LOAD ypos, 70
+		CALL moveto
+		LOAD xpos, 58
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 78
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, 78
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 58
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, 88					; draw letter n
+		LOAD ypos, 90
+		CALL moveto
+		LOAD xpos, 88
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, a8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, a8
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, d8					; draw letter e
+		LOAD ypos, 90
+		CALL moveto
+		LOAD xpos, b8
+		LOAD ypos, 90
+		CALL drawto
+		LOAD xpos, b8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, d8
+		LOAD ypos, 70
+		CALL drawto
+		LOAD xpos, b8
+		LOAD ypos, 90
+		CALL drawto
+		RETURN
 
 ;;============================================================================
 ;; Subroutine: moveto and drawto
