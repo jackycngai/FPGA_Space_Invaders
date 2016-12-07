@@ -11,7 +11,7 @@
 ;;			   1.1 - replaced padl with tank and cleaned up code
 ;;			   1.2 - added in bullet, bullet shooting, and bullet resetting
 ;;			   1.3 - added in shield drawings
-;;			   1.4 - 
+;;			   1.4 - completion of shield hit detection and bullet reset
 ;;============================================================================
 
 ;;============================================================================
@@ -71,9 +71,9 @@ CONSTANT gs_minor_getrdy , 1e ; frame count about 0.5 secs
 NAMEREG s2, gs_tbulletx
 NAMEREG s3, gs_tbullety
 NAMEREG s4, gs_tbulletdy
-CONSTANT gs_tbullet_xdim  , 00 ; it's this plus 1
-CONSTANT gs_tbullet_ydim  , 05 ; it's this plus 1
-CONSTANT gs_tbullet_speed , 08 ; pixels per frame
+CONSTANT gs_tbullet_xdim , 00 ; it's this plus 1
+CONSTANT gs_tbullet_ydim , 05 ; it's this plus 1
+CONSTANT gs_tbullet_speed, 08 ; pixels per frame
 
 NAMEREG s5, gs_tankx
 CONSTANT gs_tanky        , f4 ; tank y location
@@ -81,18 +81,30 @@ CONSTANT gs_tank_xdim    , 10 ; it's this plus 1
 CONSTANT gs_tank_ydim    , 08 ; it's this plus 1
 CONSTANT gs_tank_speed   , 02 ; pixels per frame
 
+NAMEREG s6, shieldshp		  ; health register counter for 4 shields: 00 00 00 00
+CONSTANT shield1hit		 , 40 ; add to shieldshp when shield 1 is hit: 01 00 00 00
+CONSTANT shield2hit		 , 10 ; add to shieldshp when shield 2 is hit: 00 01 00 00
+CONSTANT shield3hit		 , 04 ; add to shieldshp when shield 3 is hit: 00 00 01 00
+CONSTANT shield4hit		 , 01 ; add to shieldshp when shield 4 is hit: 00 00 00 01
+CONSTANT shieldxdim      , 18 ; shield x dimension is 24 pixels
+CONSTANT shieldydim		 , 14 ; shield y dimension is 20 pixels
+CONSTANT shield1x		 , 10 ; shield 1 starts at x = 16
+CONSTANT shield2x		 , 52 ; shield 2 starts at x = 82
+CONSTANT shield3x		 , 95 ; shield 3 starts at x = 149
+CONSTANT shield4x		 , d7 ; shield 4 starts at x = 215
+CONSTANT shieldy		 , e0 ; shield starts at y = 224
+
 ;;============================================================================
 ;; Global variables.
 ;;============================================================================
 
-NAMEREG s6, resvd0            ; reserved
 NAMEREG s7, resvd1            ; reserved
 NAMEREG s8, resvd2            ; reserved
 NAMEREG sC, resvd3            ; reserved
 
 NAMEREG s9, xpos              ; for drawing routines
 NAMEREG sA, ypos              ; for drawing routines
-NAMEREG sB, tbullet_en		  ; for bullet enable
+NAMEREG sB, tbullet_en		  ; for tank bullet enable
 NAMEREG sD, btnsamp           ; button sample
 NAMEREG sE, loopvar           ; for loops
 NAMEREG sF, scratch           ; for scratch
@@ -106,14 +118,6 @@ CONSTANT minusmax        , 80 ; minus 128
 CONSTANT plusmax         , 7f ; plus 127
 CONSTANT zero            , 00 ; zero
 CONSTANT one             , 01 ; one
-CONSTANT shieldhp        , 08 ; shield health is 8
-CONSTANT shieldxdim      , 18 ; shield x dimension is 24 pixels
-CONSTANT shieldydim		 , 14 ; shield y dimension is 20 pixels
-CONSTANT shield1x		 , 10 ; shield 1 starts at x = 16
-CONSTANT shield2x		 , 52 ; shield 2 starts at x = 82
-CONSTANT shield3x		 , 95 ; shield 3 starts at x = 149
-CONSTANT shield4x		 , d7 ; shield 4 starts at x = 215
-CONSTANT shieldy		 , e0 ; shield starts at y = 224
 
 ;;============================================================================
 ;; Boot.
@@ -141,10 +145,10 @@ main:
 ;;============================================================================
 
 isr:
-		CALL user_input						; get the user input
+		CALL user_input							; get the user input
 		CALL calc_next_gs						; calculate next state
 		CALL draw_gs							; draw the state
-		RETURNI ENABLE						; return with enable
+		RETURNI ENABLE							; return with enable
 
 ;;============================================================================
 ;; Subroutine: hw_init
@@ -155,20 +159,20 @@ isr:
 
 hw_init:
 		LOAD scratch, zero						; going to use lot of zero
-		OUTPUT scratch, leds_lo				; turn off lo leds
-		OUTPUT scratch, leds_hi				; turn off hi leds
-		OUTPUT scratch, qssd_lo				; zeroize qssd lo
-		OUTPUT scratch, qssd_hi				; zeroize qssd hi
-		OUTPUT scratch, qssd_dp				; turn off qssd dots
+		OUTPUT scratch, leds_lo					; turn off lo leds
+		OUTPUT scratch, leds_hi					; turn off hi leds
+		OUTPUT scratch, qssd_lo					; zeroize qssd lo
+		OUTPUT scratch, qssd_hi					; zeroize qssd hi
+		OUTPUT scratch, qssd_dp					; turn off qssd dots
 		LOAD scratch, mode_exp					; load desired mode
 		OUTPUT scratch, mode					; program the framebuffer
 		LOAD scratch, beam_hi					; load desired beam
 		OUTPUT scratch, beam					; program the framebuffer
 hw_init_wait:
-		INPUT scratch, busy					; get framebuffer busy
+		INPUT scratch, busy						; get framebuffer busy
 		COMPARE scratch, busy_go				; check framebuffer busy
 		JUMP Z, hw_init_wait					; back to wait if busy
-		RETURN								; return
+		RETURN									; return
 
 ;;============================================================================
 ;; Subroutine: gs_init
@@ -178,14 +182,14 @@ hw_init_wait:
 ;;============================================================================
 
 gs_init:
-		LOAD gs_major, gs_major_attrone		; start in attract mdoe
+		LOAD gs_major, gs_major_attrone			; start in attract mdoe
 		LOAD gs_minor, gs_minor_begins			; start with counter zero
 		LOAD gs_tbulletx, zero					; doesn't really matter
 		LOAD gs_tbullety, zero					; doesn't really matter
-		LOAD gs_tankx, zero					; doesn't really matter
-		LOAD gs_tbulletdy, zero				; doesn't really matter
+		LOAD gs_tankx, zero						; doesn't really matter
+		LOAD gs_tbulletdy, zero					; doesn't really matter
 		LOAD tbullet_en, zero					; start with top button not pressed
-		RETURN								; return
+		RETURN									; return
 
 ;;============================================================================
 ;; Subroutine: user_input
@@ -199,7 +203,7 @@ gs_init:
 
 user_input:
 		INPUT btnsamp, buttons					; sample button hardware
-		RETURN								; return
+		RETURN									; return
 
 ;;============================================================================
 ;; Subroutine: calc_next_gs
@@ -208,20 +212,20 @@ user_input:
 ;;============================================================================
 
 calc_next_gs:
-		COMPARE gs_major, gs_major_attrone	; are we in attrone?
+		COMPARE gs_major, gs_major_attrone		; are we in attrone?
 		JUMP Z, calc_attrone					; do ns calc for attrone
-		COMPARE gs_major, gs_major_attrtwo	; are we in attrtwo?
+		COMPARE gs_major, gs_major_attrtwo		; are we in attrtwo?
 		JUMP Z, calc_attrtwo					; do ns calc for attrtwo
-		COMPARE gs_major, gs_major_playing 	; are we in playing?
+		COMPARE gs_major, gs_major_playing 		; are we in playing?
 		JUMP Z, calc_playing					; do ns calc for playing
-		COMPARE gs_major, gs_major_gameend 	; are we in gameend?
+		COMPARE gs_major, gs_major_gameend 		; are we in gameend?
 		JUMP Z, calc_gameend					; do ns calc for gameend
 		RETURN
 
 calc_attrone:
 		TEST btnsamp, buttons_ct				; starts game if center button is pressed
 		JUMP NZ, initial_positions				; othersize, swap between bong and ec
-		COMPARE gs_minor, gs_minor_twosec 	; attrone is bong, attrtwo is ec
+		COMPARE gs_minor, gs_minor_twosec 		; attrone is bong, attrtwo is ec
 		JUMP Z, goto_attrtwo
 		ADD gs_minor, one
 		RETURN
@@ -235,7 +239,7 @@ calc_attrtwo:
 		RETURN
 
 initial_positions:
-		LOAD gs_tankx, gs_tank_xdim			; start tank at the bottom horizontal center of screen
+		LOAD gs_tankx, gs_tank_xdim				; start tank at the bottom horizontal center of screen
 		SRX gs_tankx
 		XOR gs_tankx, minusone
 		ADD gs_tankx, one
@@ -300,15 +304,73 @@ upd_tbullet_loop:
 		RETURN C								; needed for some reason I do not know... yet
 		SUB gs_tbullety, one
 		JUMP Z, reset_tbullet
+		COMPARE gs_tbullety, shieldy
+		JUMP Z, check_shield
+restart_upd_bullet_loop:
 		JUMP upd_tbullet_loop
-reset_tbullet:
-		LOAD scratch, gs_tankx					; when bullet hits the top, reload the bullet position
+reset_tbullet:									; reload bullet position when it hits something
+		LOAD scratch, gs_tankx
 		ADD scratch, 08
 		LOAD gs_tbulletx, scratch
 		LOAD scratch, gs_tanky
 		SUB scratch, 03
 		LOAD gs_tbullety, scratch
 		LOAD tbullet_en, zero
+		RETURN
+
+check_shield:									; check which shield region the bullet is in
+		LOAD scratch, shield1x
+		ADD scratch, shieldxdim
+		COMPARE gs_tbulletx, scratch
+		JUMP C, check_shield1
+		LOAD scratch, shield2x
+		ADD scratch, shieldxdim
+		COMPARE gs_tbulletx, scratch
+		JUMP C, check_shield2
+		LOAD scratch, shield3x
+		ADD scratch, shieldxdim
+		COMPARE gs_tbulletx, scratch
+		JUMP C, check_shield3
+		LOAD scratch, shield4x
+		ADD scratch, shieldxdim
+		COMPARE gs_tbulletx, scratch
+		JUMP C, check_shield4
+		JUMP restart_upd_bullet_loop
+check_shield1:									; check if the bullet hit shield 1
+		LOAD scratch, shield1x
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, restart_upd_bullet_loop
+		LOAD scratch, shield1x
+		ADD scratch, shieldxdim
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, reset_tbullet
+		RETURN
+check_shield2:									; check if the bullet hit shield 2
+		LOAD scratch, shield2x
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, restart_upd_bullet_loop
+		LOAD scratch, shield2x
+		ADD scratch, shieldxdim
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, reset_tbullet
+		RETURN
+check_shield3:									; check if the bullet hit shield 3
+		LOAD scratch, shield3x
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, restart_upd_bullet_loop
+		LOAD scratch, shield3x
+		ADD scratch, shieldxdim
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, reset_tbullet
+		RETURN
+check_shield4:									; check if the bullet hit shield 4
+		LOAD scratch, shield4x
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, restart_upd_bullet_loop
+		LOAD scratch, shield4x
+		ADD scratch, shieldxdim
+		COMPARE scratch, gs_tbulletx
+		JUMP NC, reset_tbullet
 		RETURN
 
 calc_gameend:
@@ -341,24 +403,24 @@ goto_gameend:
 ;;============================================================================
 
 draw_gs:
-		CALL draw_gs_debug                  ; for debug info display
-		COMPARE gs_major, gs_major_attrone  ; are we in attrone?
-		JUMP Z, draw_attrone                ; do drawing for attrone
-		COMPARE gs_major, gs_major_attrtwo  ; are we in attrtwo?
-		JUMP Z, draw_attrtwo                ; do drawing for attrtwo
-		COMPARE gs_major, gs_major_playing  ; are we in playing?
-		JUMP Z, draw_playing                ; do drawing for playing
-		COMPARE gs_major, gs_major_gameend  ; are we in gameend?
-		JUMP Z, draw_gameend                ; do drawing for gameend
-		RETURN                              ; return
+		CALL draw_gs_debug						; for debug info display
+		COMPARE gs_major, gs_major_attrone		; are we in attrone?
+		JUMP Z, draw_attrone					; do drawing for attrone
+		COMPARE gs_major, gs_major_attrtwo		; are we in attrtwo?
+		JUMP Z, draw_attrtwo					; do drawing for attrtwo
+		COMPARE gs_major, gs_major_playing		; are we in playing?
+		JUMP Z, draw_playing					; do drawing for playing
+		COMPARE gs_major, gs_major_gameend 		; are we in gameend?
+		JUMP Z, draw_gameend					; do drawing for gameend
+		RETURN									; return
 
 draw_gs_debug:
-		OUTPUT gs_major, leds_hi            ; debug display on leds
-		OUTPUT gs_minor, leds_lo            ; debug display on leds
-		RETURN                              ; return
+		OUTPUT gs_major, leds_hi				; debug display on leds
+		OUTPUT gs_minor, leds_lo				; debug display on leds
+		RETURN									; return
 
 draw_attrone:
-		LOAD xpos, 28					; draw letter b
+		LOAD xpos, 28			; draw letter b
 		LOAD ypos, 50
 		CALL moveto
 		LOAD xpos, 28
@@ -373,7 +435,7 @@ draw_attrone:
 		LOAD xpos, 28
 		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, 58					; draw letter o
+		LOAD xpos, 58			; draw letter o
 		LOAD ypos, 70
 		CALL moveto
 		LOAD xpos, 58
@@ -388,7 +450,7 @@ draw_attrone:
 		LOAD xpos, 58
 		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, 88					; draw letter n
+		LOAD xpos, 88			; draw letter n
 		LOAD ypos, 90
 		CALL moveto
 		LOAD xpos, 88
@@ -400,7 +462,7 @@ draw_attrone:
 		LOAD xpos, a8
 		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, b8					; draw letter g
+		LOAD xpos, b8			; draw letter g
 		LOAD ypos, b0
 		CALL moveto
 		LOAD xpos, d8
@@ -421,7 +483,7 @@ draw_attrone:
 		RETURN
 
 draw_attrtwo:
-		LOAD xpos, 78					; draw letter e
+		LOAD xpos, 78			; draw letter e
 		LOAD ypos, 90
 		CALL moveto
 		LOAD xpos, 58
@@ -436,7 +498,7 @@ draw_attrtwo:
 		LOAD xpos, 58
 		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, a8					; draw letter c
+		LOAD xpos, a8			; draw letter c
 		LOAD ypos, 70
 		CALL moveto
 		LOAD xpos, 88
@@ -451,7 +513,7 @@ draw_attrtwo:
 		RETURN
 
 draw_playing:
-		LOAD xpos, gs_tbulletx			; draw bullet
+		LOAD xpos, gs_tbulletx	; draw bullet
 		LOAD ypos, gs_tbullety
 		CALL moveto
 		LOAD xpos, gs_tbulletx
@@ -459,7 +521,7 @@ draw_playing:
 		ADD ypos, gs_tbullet_ydim
 		CALL drawto
 		
-		LOAD xpos, gs_tankx			; draw tank
+		LOAD xpos, gs_tankx	; draw tank
 		LOAD ypos, gs_tanky
 		CALL moveto
 		LOAD xpos, gs_tankx
@@ -479,169 +541,169 @@ draw_playing:
 		LOAD ypos, gs_tanky
 		CALL drawto
 		
-		LOAD xpos, shield1x			; draw shield 1
+		LOAD xpos, shield1x	; draw shield 1
 		LOAD ypos, shieldy
 		CALL moveto
-		LOAD xpos, shield1x			; draw shield 1 side 1
+		LOAD xpos, shield1x	; draw shield 1 side 1
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 2
+		LOAD xpos, shield1x	; draw shield 1 side 2
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 3
+		LOAD xpos, shield1x	; draw shield 1 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 4
+		LOAD xpos, shield1x	; draw shield 1 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 5
+		LOAD xpos, shield1x	; draw shield 1 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 6
+		LOAD xpos, shield1x	; draw shield 1 side 6
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 7
+		LOAD xpos, shield1x	; draw shield 1 side 7
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		CALL drawto
-		LOAD xpos, shield1x			; draw shield 1 side 8
+		LOAD xpos, shield1x	; draw shield 1 side 8
 		LOAD ypos, shieldy
 		CALL drawto
 		
-		LOAD xpos, shield2x			; draw shield 2
+		LOAD xpos, shield2x	; draw shield 2
 		LOAD ypos, shieldy
 		CALL moveto
-		LOAD xpos, shield2x			; draw shield 2 side 1
+		LOAD xpos, shield2x	; draw shield 2 side 1
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 2
+		LOAD xpos, shield2x	; draw shield 2 side 2
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 3
+		LOAD xpos, shield2x	; draw shield 2 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 4
+		LOAD xpos, shield2x	; draw shield 2 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 5
+		LOAD xpos, shield2x	; draw shield 2 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 6
+		LOAD xpos, shield2x	; draw shield 2 side 6
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 7
+		LOAD xpos, shield2x	; draw shield 2 side 7
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		CALL drawto
-		LOAD xpos, shield2x			; draw shield 2 side 8
+		LOAD xpos, shield2x	; draw shield 2 side 8
 		LOAD ypos, shieldy
 		CALL drawto
 		
-		LOAD xpos, shield3x			; draw shield 3
+		LOAD xpos, shield3x	; draw shield 3
 		LOAD ypos, shieldy
 		CALL moveto
-		LOAD xpos, shield3x			; draw shield 3 side 1
+		LOAD xpos, shield3x	; draw shield 3 side 1
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 2
+		LOAD xpos, shield3x	; draw shield 3 side 2
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 3
+		LOAD xpos, shield3x	; draw shield 3 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 4
+		LOAD xpos, shield3x	; draw shield 3 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 5
+		LOAD xpos, shield3x	; draw shield 3 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 6
+		LOAD xpos, shield3x	; draw shield 3 side 6
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 7
+		LOAD xpos, shield3x	; draw shield 3 side 7
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		CALL drawto
-		LOAD xpos, shield3x			; draw shield 3 side 8
+		LOAD xpos, shield3x	; draw shield 3 side 8
 		LOAD ypos, shieldy
 		CALL drawto
 		
-		LOAD xpos, shield4x			; draw shield 4
+		LOAD xpos, shield4x	; draw shield 4
 		LOAD ypos, shieldy
 		CALL moveto
-		LOAD xpos, shield4x			; draw shield 4 side 1
+		LOAD xpos, shield4x	; draw shield 4 side 1
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 2
+		LOAD xpos, shield4x	; draw shield 4 side 2
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 3
+		LOAD xpos, shield4x	; draw shield 4 side 3
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 09
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 4
+		LOAD xpos, shield4x	; draw shield 4 side 4
 		LOAD ypos, shieldy
 		SUB ypos, 0e
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 5
+		LOAD xpos, shield4x	; draw shield 4 side 5
 		LOAD ypos, shieldy
 		SUB ypos, shieldydim
 		ADD xpos, 0f
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 6
+		LOAD xpos, shield4x	; draw shield 4 side 6
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		SUB ypos, shieldydim
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 7
+		LOAD xpos, shield4x	; draw shield 4 side 7
 		LOAD ypos, shieldy
 		ADD xpos, shieldxdim
 		CALL drawto
-		LOAD xpos, shield4x			; draw shield 4 side 8
+		LOAD xpos, shield4x	; draw shield 4 side 8
 		LOAD ypos, shieldy
 		CALL drawto
 		RETURN
 
 draw_gameend:
-		LOAD xpos, 48					; draw letter d
+		LOAD xpos, 48			; draw letter d
 		LOAD ypos, 50
 		CALL moveto
 		LOAD xpos, 48
@@ -656,7 +718,7 @@ draw_gameend:
 		LOAD xpos, 48
 		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, 58					; draw letter o
+		LOAD xpos, 58			; draw letter o
 		LOAD ypos, 70
 		CALL moveto
 		LOAD xpos, 58
@@ -671,7 +733,7 @@ draw_gameend:
 		LOAD xpos, 58
 		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, 88					; draw letter n
+		LOAD xpos, 88			; draw letter n
 		LOAD ypos, 90
 		CALL moveto
 		LOAD xpos, 88
@@ -683,7 +745,7 @@ draw_gameend:
 		LOAD xpos, a8
 		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, d8					; draw letter e
+		LOAD xpos, d8			; draw letter e
 		LOAD ypos, 90
 		CALL moveto
 		LOAD xpos, b8
@@ -712,27 +774,30 @@ draw_gameend:
 ;; starts a linedraw.
 ;;============================================================================
 
-       moveto: OUTPUT xpos, endx                   ; copy global to hardware
-               OUTPUT ypos, endy                   ; copy global to hardware
-               RETURN                              ; return
+moveto:
+		OUTPUT xpos, endx		; copy global to hardware
+		OUTPUT ypos, endy		; copy global to hardware
+		RETURN				; return
 
-       drawto: INPUT scratch, endx                 ; read hardware
-               OUTPUT scratch, stax                ; write hardware
-               OUTPUT xpos, endx                   ; copy global to hardware
-               INPUT scratch, endy                 ; read hardware
-               OUTPUT scratch, stay                ; write hardware
-               OUTPUT ypos, endy                   ; copy global to hardware
-               LOAD scratch, busy_go               ; prepare the command
-               OUTPUT scratch, busy                ; send the command
-               CALL hw_init_wait                   ; wait line draw done
-               RETURN                              ; return
+drawto:
+		INPUT scratch, endx	; read hardware
+		OUTPUT scratch, stax	; write hardware
+		OUTPUT xpos, endx		; copy global to hardware
+		INPUT scratch, endy	; read hardware
+		OUTPUT scratch, stay	; write hardware
+		OUTPUT ypos, endy		; copy global to hardware
+		LOAD scratch, busy_go	; prepare the command
+		OUTPUT scratch, busy	; send the command
+		CALL hw_init_wait		; wait line draw done
+		RETURN				; return
 
 ;;============================================================================
 ;; Interrupt - Vector.
 ;;============================================================================
 
-               ADDRESS 7FF                         ; must be located here
-   isr_vector: JUMP isr                            ; always jump to isr
+		ADDRESS 7FF		; must be located here
+isr_vector:
+		JUMP isr		; always jump to isr
 
 ;;============================================================================
 ;;
