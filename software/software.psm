@@ -271,6 +271,16 @@ initial_positions:
 		LOAD gs_tbullety, scratch
 		LOAD gs_major, gs_major_playing
 		LOAD gs_minor, gs_minor_begins
+		
+		LOAD scratch, zero						; loads zero to scratch
+		STORE scratch, alien_x					; aliens start at 0,0
+		STORE scratch, alien_y					; aliens start at 0,0
+		LOAD scratch, ff						; loads ff to scratch
+		STORE scratch, alien_1_hp				; sets full health to aliens
+		STORE scratch, alien_2_hp				; sets full health to aliens
+		STORE scratch, alien_3_hp				; sets full health to aliens
+		STORE scratch, alien_4_hp				; sets full health to aliens
+		STORE scratch, alien_5_hp				; sets full health to aliens
 		RETURN
 
 calc_playing:
