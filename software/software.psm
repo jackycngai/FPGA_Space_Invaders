@@ -284,6 +284,7 @@ calc_playing:
 
 upd_aliens:
 		FETCH scratch, alien_x					; store alien x position to scratch
+		COMPARE scratch, 87					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		COMPARE scratch, 00
 		CALL Z, upd_aliens_y					; if at end add one to y position
@@ -292,6 +293,7 @@ upd_aliens:
 		CALL NC, upd_aliens_x_left
 		CALL C, upd_aliens_x_right
 		FETCH scratch, alien_y
+		COMPARE scratch, be
 		CALL Z, goto_gameend					; end the game if aliens reach end
 		RETURN
 
