@@ -1,543 +1,1257 @@
-               ;;============================================================================
-               ;; File: software.psm
-               ;; This is the PicoBlaze example game program for EE178 Lab #8.
-               ;; No guarantee this is bug-free but it is a playable example.
-               ;;============================================================================
-               ;;============================================================================
-               ;; Ports and related constants.
-               ;;============================================================================
-               CONSTANT stax, 00                  ; port for 8-bit start-x
-               CONSTANT stay, 01                  ; port for 8-bit start-y
-               CONSTANT endx, 02                  ; port for 8-bit end-x
-               CONSTANT endy, 03                  ; port for 8-bit end-y
-               CONSTANT busy, 04                  ; port for 8-bit busy
-               CONSTANT beam, 05                  ; port for 8-bit beam
-               CONSTANT mode, 06                  ; port for 8-bit mode
-               CONSTANT prng, 07                  ; port for 8-bit prng
-               CONSTANT leds_lo, 08               ; port for 8-bit led data out
-               CONSTANT leds_hi, 09               ; port for 8-bit led data out
-               CONSTANT qssd_lo, 0A               ; port for 8-bit qssd data out
-               CONSTANT qssd_hi, 0B               ; port for 8-bit qssd data out
-               CONSTANT qssd_dp, 0C               ; port for 8-bit qssd data out
-               CONSTANT switches_lo, 0D           ; port for 8-bit switch input
-               CONSTANT switches_hi, 0E           ; port for 8-bit switch input
-               CONSTANT buttons, 0F               ; port for 8-bit button input
-               CONSTANT busy_go, 01               ; go command and busy status
-               CONSTANT beam_hi, 0F               ; beam high intensity
-               CONSTANT beam_md, 07               ; beam med intensity
-               CONSTANT beam_lo, 03               ; beam low intensity
-               CONSTANT mode_hld, 00              ; mode hold framebuffer
-               CONSTANT mode_clr, 01              ; mode clear framebuffer
-               CONSTANT mode_lin, 02              ; mode linear decay
-               CONSTANT mode_exp, 03              ; mode exponential decay
-               CONSTANT buttons_ct, 10            ; center
-               CONSTANT buttons_up, 08            ; up
-               CONSTANT buttons_dn, 04            ; down
-               CONSTANT buttons_lf, 02            ; left
-               CONSTANT buttons_rt, 01            ; right
-               ;;============================================================================
-               ;; Game state declarations.
-               ;;============================================================================
-               NAMEREG s0, gs_major
-               CONSTANT gs_major_attrone, 00      ; state assignment
-               CONSTANT gs_major_attrtwo, 01      ; state assignment
-               CONSTANT gs_major_playing, 02      ; state assignment
-               CONSTANT gs_major_gameend, 03      ; state assignment
-               NAMEREG s1, gs_minor
-               CONSTANT gs_minor_begins, 00       ; counter initialize
-               CONSTANT gs_minor_twosec, 78       ; frame count about 2.0 secs
-               CONSTANT gs_minor_onesec, 3C       ; frame count about 1.0 secs
-               CONSTANT gs_minor_getrdy, 1E       ; frame count about 0.5 secs
-               NAMEREG s2, gs_ballx
-               NAMEREG s3, gs_bally
-               NAMEREG s4, gs_balldx
-               NAMEREG s5, gs_balldy
-               CONSTANT gs_ball_xdim, 08          ; it's this plus 1
-               CONSTANT gs_ball_ydim, 08          ; it's this plus 1
-               CONSTANT gs_ball_speed, 03         ; pixels per frame
-               NAMEREG s6, gs_padlx
-               CONSTANT gs_padly, D0              ; paddle y location
-               CONSTANT gs_padl_xdim, 20          ; it's this plus 1
-               CONSTANT gs_padl_ydim, 08          ; it's this plus 1
-               CONSTANT gs_padl_speed, 04         ; pixels per frame
-               ;;============================================================================
-               ;; Global variables.
-               ;;============================================================================
-               NAMEREG s7, resvd1                 ; reserved
-               NAMEREG s8, resvd2                 ; reserved
-               NAMEREG s9, xpos                   ; for drawing routines
-               NAMEREG sA, ypos                   ; for drawing routines
-               NAMEREG sB, swlsamp                ; switch lo sample
-               NAMEREG sC, swhsamp                ; switch hi sample
-               NAMEREG sD, btnsamp                ; button sample
-               NAMEREG sE, loopvar                ; for loops
-               NAMEREG sF, scratch                ; for scratch
-               ;;============================================================================
-               ;; Other stuff.
-               ;;============================================================================
-               CONSTANT minusone, FF              ; minusone
-               CONSTANT minusmax, 80              ; minus 128
-               CONSTANT plusmax, 7F               ; plus 127
-               CONSTANT zero, 00                  ; zero
-               CONSTANT one, 01                   ; one
-               ;;============================================================================
-               ;; Boot.
-               ;; This performs one-time initialization of the hardware and the game state.
-               ;;============================================================================
-         boot: CALL hw_init                       ; initial hardware setup
-               CALL gs_init                       ; set initial game state
-               ENABLE INTERRUPT                   ; enable vblnk interrupt
-               ;;============================================================================
-               ;; Main.
-               ;; This is an empty loop, does nothing, waiting for interrupts to occur.
-               ;;============================================================================
-         main: JUMP main                          ; empty loop, does nothing
-               ;;============================================================================
-               ;; Interrupt.
-               ;; This is the main game logic.  At each interrupt, the procedure is to read
-               ;; the user input, calculate the next game state, and then draw the game
-               ;; state on the display.
-               ;;============================================================================
-          isr: CALL user_input                    ; get the user input
-               CALL calc_next_gs                  ; calculate next state
-               CALL draw_gs                       ; draw the state
-               RETURNI ENABLE                     ; return with enable
-               ;;============================================================================
-               ;; Subroutine: hw_init
-               ;; This puts the hardware into a known, initial state.  This includes a wait
-               ;; to make sure the line drawing harware is idle (a wait loop which is also
-               ;; called from other routines, as a subroutine).
-               ;;============================================================================
-      hw_init: LOAD scratch, zero                 ; going to use lot of zero
-               OUTPUT scratch, leds_lo            ; turn off lo leds
-               OUTPUT scratch, leds_hi            ; turn off hi leds
-               OUTPUT scratch, qssd_lo            ; zeroize qssd lo
-               OUTPUT scratch, qssd_hi            ; zeroize qssd hi
-               OUTPUT scratch, qssd_dp            ; turn off qssd dots
-               LOAD scratch, mode_exp             ; load desired mode
-               OUTPUT scratch, mode               ; program the framebuffer
-               LOAD scratch, beam_hi              ; load desired beam
-               OUTPUT scratch, beam               ; program the framebuffer
- hw_init_wait: INPUT scratch, busy                ; get framebuffer busy
-               COMPARE scratch, busy_go           ; check framebuffer busy
-               JUMP Z, hw_init_wait               ; back to wait if busy
-               RETURN                             ; return
-               ;;============================================================================
-               ;; Subroutine: gs_init
-               ;; This puts the game into a known, initial state.  I've assigned all of the
-               ;; game state to a known value -- although some of these assignments do not
-               ;; really matter based on design of the game state machine.
-               ;;============================================================================
-      gs_init: LOAD gs_major, gs_major_attrone    ; start in attract mdoe
-               LOAD gs_minor, gs_minor_begins     ; start with counter zero
-               LOAD gs_ballx, zero                ; doesn't really matter
-               LOAD gs_bally, zero                ; doesn't really matter
-               LOAD gs_padlx, zero                ; doesn't really matter
-               LOAD gs_balldx, zero               ; doesn't really matter
-               LOAD gs_balldy, zero               ; doesn't really matter
-               RETURN                             ; return
-               ;;============================================================================
-               ;; Subroutine: user_input
-               ;; This samples the user inputs required for this game (which happens to be
-               ;; only the buttons, but this could is extended to the switches as well).
-               ;; This subroutine calls an example of how to use the RAM scratchpad, by
-               ;; implementing access of a 256x8 array using switches, button, and qssd.
-               ;; The call to the ram_example routine (and ram_example routine itself)
-               ;; can be entirely removed as it is not needed in this game.
-               ;;============================================================================
-   user_input: INPUT btnsamp, buttons             ; sample button hardware
-               INPUT swlsamp, switches_lo         ; sample switch lo hardware
-               INPUT swhsamp, switches_hi         ; sample switch hi hardware
-               CALL ram_example                   ; do the ram example
-               RETURN                             ; return
-  ram_example: OUTPUT swhsamp, qssd_hi            ; display ram address
-               FETCH scratch, (swhsamp)           ; read the ram at addr
-               OUTPUT scratch, qssd_lo            ; display data from ram
-               TEST btnsamp, buttons_dn           ; does user want to write
-               RETURN Z                           ; if not then return
-               STORE swlsamp, (swhsamp)           ; write the ram at addr
-               RETURN                             ; return
-               ;;============================================================================
-               ;; Subroutine: calc_next_gs
-               ;; This logic calculates the next state of the game, given the sampled user
-               ;; inputs and the current state of the game.
-               ;;============================================================================
- calc_next_gs: COMPARE gs_major, gs_major_attrone ; are we in attrone?
-               JUMP Z, calc_attrone               ; do ns calc for attrone
-               COMPARE gs_major, gs_major_attrtwo ; are we in attrtwo?
-               JUMP Z, calc_attrtwo               ; do ns calc for attrtwo
-               COMPARE gs_major, gs_major_playing ; are we in playing?
-               JUMP Z, calc_playing               ; do ns calc for playing
-               COMPARE gs_major, gs_major_gameend ; are we in gameend?
-               JUMP Z, calc_gameend               ; do ns calc for gameend
-               RETURN                             ; return
- calc_attrone: TEST btnsamp, buttons_ct
-               JUMP NZ, goto_playing
-               COMPARE gs_minor, gs_minor_twosec
-               JUMP Z, goto_attrtwo
-               ADD gs_minor, one
-               RETURN 
- calc_attrtwo: TEST btnsamp, buttons_ct
-               JUMP NZ, goto_playing
-               COMPARE gs_minor, gs_minor_onesec
-               JUMP Z, goto_attrone
-               ADD gs_minor, one
-               RETURN 
- calc_playing: CALL upd_padl
-               COMPARE gs_minor, gs_minor_getrdy
-               JUMP NC, goplay
-       getrdy: ADD gs_minor, one
-               RETURN 
-       goplay: CALL upd_ball
-               COMPARE gs_balldy, zero
-               COMPARECY gs_balldx, zero
-               JUMP Z, goto_gameend
-               RETURN 
-     upd_padl: LOAD scratch, zero
-               TEST btnsamp, buttons_lf
-               SUBCY scratch, zero
-               TEST btnsamp, buttons_rt
-               ADDCY scratch, zero
-               COMPARE scratch, minusone
-               CALL Z, upd_padl_lt
-               COMPARE scratch, one
-               CALL Z, upd_padl_rt
-               RETURN 
-  upd_padl_lt: SUB gs_padlx, gs_padl_speed
-               RETURN NC
-               LOAD gs_padlx, zero
-               RETURN 
-  upd_padl_rt: ADD gs_padlx, gs_padl_speed
-               LOAD scratch, gs_padlx
-               ADD scratch, gs_padl_xdim
-               RETURN NC
-               LOAD gs_padlx, minusone
-               SUB gs_padlx, gs_padl_xdim
-               RETURN 
-     upd_ball: LOAD loopvar, gs_ball_speed
-upd_ball_loop: SUB loopvar, one
-               RETURN C
-upd_ball_step: ADD gs_ballx, gs_balldx
-               ADD gs_bally, gs_balldy
-upd_ball_padl: LOAD scratch, gs_padly
-               SUB scratch, gs_ball_ydim
-               COMPARE gs_bally, scratch
-               JUMP NZ, upd_ball_lw
-               LOAD scratch, gs_ballx
-               ADD scratch, gs_ball_xdim
-               COMPARE scratch, gs_padlx
-               JUMP C, upd_ball_lw
-               LOAD scratch, gs_padlx
-               ADD scratch, gs_padl_xdim
-               COMPARE scratch, gs_ballx
-               JUMP C, upd_ball_lw
-               LOAD gs_balldy, minusone
-  upd_ball_lw: COMPARE gs_ballx, zero
-               JUMP NZ, upd_ball_tw
-               LOAD gs_balldx, one
-  upd_ball_tw: COMPARE gs_bally, zero
-               JUMP NZ, upd_ball_rw
-               LOAD gs_balldy, one
-  upd_ball_rw: LOAD scratch, minusone
-               SUB scratch, gs_ball_xdim
-               COMPARE gs_ballx, scratch
-               JUMP NZ, upd_ball_bw
-               LOAD gs_balldx, minusone
-  upd_ball_bw: LOAD scratch, minusone
-               SUB scratch, gs_ball_ydim
-               COMPARE gs_bally, scratch
-               JUMP NZ, upd_ball_done
-               LOAD gs_balldy, zero
-               LOAD gs_balldx, zero
-upd_ball_done: JUMP upd_ball_loop
- calc_gameend: COMPARE gs_minor, gs_minor_onesec
-               JUMP Z, goto_attrone
-               ADD gs_minor, one
-               RETURN 
- goto_attrone: LOAD gs_major, gs_major_attrone
-               LOAD gs_minor, gs_minor_begins
-               RETURN 
- goto_attrtwo: LOAD gs_major, gs_major_attrtwo
-               LOAD gs_minor, gs_minor_begins
-               RETURN 
- goto_playing: LOAD gs_major, gs_major_playing
-               LOAD gs_minor, gs_minor_begins
-               ; get a seed for initial ballx
-               INPUT gs_ballx, prng
-               ; start ball somewhere in the
-               ; horizontal center of screen
-               SRX gs_ballx
-               SRX gs_ballx
-               ADD gs_ballx, plusmax
-               ; get a seed for initial bally
-               INPUT gs_bally, prng
-               ; start ball somewhere in the
-               ; vertical center of screen
-               SRX gs_bally
-               SRX gs_bally
-               ADD gs_bally, plusmax
-               ; start paddle at the horizontal
-               ; center of the screen
-               LOAD gs_padlx, gs_padl_xdim
-               SRX gs_padlx
-               XOR gs_padlx, minusone
-               ADD gs_padlx, one
-               ADD gs_padlx, minusmax
-               ; initial direction for ballx
-               ; desire to start at +1 or -1
-    balldxsta: INPUT gs_balldx, prng
-               TEST gs_balldx, minusmax
-               JUMP Z, balldxpos
-    balldxneg: LOAD gs_balldx, minusone
-               JUMP balldysta
-    balldxpos: LOAD gs_balldx, one
-               ; initial direction for bally
-               ; desire to start at +1 or -1
-    balldysta: INPUT gs_balldy, prng
-               TEST gs_balldy, minusmax
-               JUMP Z, balldypos
-    balldyneg: LOAD gs_balldy, minusone
-               JUMP ballddone
-    balldypos: LOAD gs_balldy, one
-    ballddone: RETURN 
- goto_gameend: LOAD gs_major, gs_major_gameend
-               LOAD gs_minor, gs_minor_begins
-               RETURN 
-               ;;============================================================================
-               ;; Subroutine: draw_gs
-               ;; This uses the current game state as input, and draws it on the display.
-               ;; This subroutine calls an example of how to output debug or diagnostic info
-               ;; using the leds.  The call to the draw_gs_debug routine (and draw_gs_debug
-               ;; routine itself) can be entirely remove as it is required to play the game.
-               ;;============================================================================
-      draw_gs: CALL draw_gs_debug                 ; for debug info display
-               COMPARE gs_major, gs_major_attrone ; are we in attrone?
-               JUMP Z, draw_attrone               ; do drawing for attrone
-               COMPARE gs_major, gs_major_attrtwo ; are we in attrtwo?
-               JUMP Z, draw_attrtwo               ; do drawing for attrtwo
-               COMPARE gs_major, gs_major_playing ; are we in playing?
-               JUMP Z, draw_playing               ; do drawing for playing
-               COMPARE gs_major, gs_major_gameend ; are we in gameend?
-               JUMP Z, draw_gameend               ; do drawing for gameend
-               RETURN                             ; return
-draw_gs_debug: OUTPUT gs_major, leds_hi           ; debug display on leds
-               OUTPUT gs_minor, leds_lo           ; debug display on leds
-               RETURN                             ; return
- draw_attrone: LOAD xpos, 28                      ; draw letter b
-               LOAD ypos, 50
-               CALL moveto
-               LOAD xpos, 28
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58                      ; draw letter o
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88                      ; draw letter n
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, A8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, A8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, B8                      ; draw letter g
-               LOAD ypos, B0
-               CALL moveto
-               LOAD xpos, D8
-               LOAD ypos, B0
-               CALL drawto
-               LOAD xpos, D8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, B8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, B8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, D8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN 
- draw_attrtwo: LOAD xpos, 78                      ; draw letter e
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, A8                      ; draw letter c
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, A8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN 
- draw_playing: LOAD xpos, gs_ballx                ; draw ball
-               LOAD ypos, gs_bally
-               CALL moveto
-               LOAD xpos, gs_ballx
-               LOAD ypos, gs_bally
-               ADD ypos, gs_ball_ydim
-               CALL drawto
-               LOAD xpos, gs_ballx
-               LOAD ypos, gs_bally
-               ADD xpos, gs_ball_xdim
-               ADD ypos, gs_ball_ydim
-               CALL drawto
-               LOAD xpos, gs_ballx
-               LOAD ypos, gs_bally
-               ADD xpos, gs_ball_xdim
-               CALL drawto
-               LOAD xpos, gs_ballx
-               LOAD ypos, gs_bally
-               CALL drawto
-               LOAD xpos, gs_padlx                ; draw padl
-               LOAD ypos, gs_padly
-               CALL moveto
-               LOAD xpos, gs_padlx
-               LOAD ypos, gs_padly
-               ADD ypos, gs_padl_ydim
-               CALL drawto
-               LOAD xpos, gs_padlx
-               LOAD ypos, gs_padly
-               ADD xpos, gs_padl_xdim
-               ADD ypos, gs_padl_ydim
-               CALL drawto
-               LOAD xpos, gs_padlx
-               LOAD ypos, gs_padly
-               ADD xpos, gs_padl_xdim
-               CALL drawto
-               LOAD xpos, gs_padlx
-               LOAD ypos, gs_padly
-               CALL drawto
-               RETURN 
- draw_gameend: LOAD xpos, 48                      ; draw letter d
-               LOAD ypos, 50
-               CALL moveto
-               LOAD xpos, 48
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58                      ; draw letter o
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88                      ; draw letter n
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, A8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, A8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, D8                      ; draw letter e
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, B8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, B8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, D8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, B8
-               LOAD ypos, 90
-               CALL drawto
-               RETURN 
-               ;;============================================================================
-               ;; Subroutine: moveto and drawto
-               ;; The moveto routine uses the global variables xpos and ypos, and the drawto
-               ;; routine uses these global variables as well as the endpoint coordinates in
-               ;; the display controller.  Moveto simply copies xpos and ypos into endpoint
-               ;; coordinates in the display controller, it does not draw anything.  The
-               ;; drawto routine copies endpoint coordinates to startpoint coordinates (does
-               ;; not matter if the endpoint was from an actual draw, or simply an update
-               ;; by moveto) and then copies xpos and ypos into endpoint coordinates, then
-               ;; starts a linedraw.
-               ;;============================================================================
-       moveto: OUTPUT xpos, endx                  ; copy global to hardware
-               OUTPUT ypos, endy                  ; copy global to hardware
-               RETURN                             ; return
-       drawto: INPUT scratch, endx                ; read hardware
-               OUTPUT scratch, stax               ; write hardware
-               OUTPUT xpos, endx                  ; copy global to hardware
-               INPUT scratch, endy                ; read hardware
-               OUTPUT scratch, stay               ; write hardware
-               OUTPUT ypos, endy                  ; copy global to hardware
-               LOAD scratch, busy_go              ; prepare the command
-               OUTPUT scratch, busy               ; send the command
-               CALL hw_init_wait                  ; wait line draw done
-               RETURN                             ; return
-               ;;============================================================================
-               ;; Interrupt - Vector.
-               ;;============================================================================
-               ADDRESS 7FF                        ; must be located here
-   isr_vector: JUMP isr                           ; always jump to isr
-               ;;============================================================================
-               ;;
-               ;;============================================================================
+                         ;;============================================================================
+                         ;; File: software.psm
+                         ;; This is the PicoBlaze example game program for EE178 Lab #8.
+                         ;; No guarantee this is bug-free but it is a playable example.
+                         ;;============================================================================
+                         ;;============================================================================
+                         ;; Editor: Thi Le
+                         ;; Current Version: 1.4
+                         ;; Change Log: 1.0 - initial file provided
+                         ;;      1.1 - replaced padl with tank and cleaned up code
+                         ;;      1.2 - added in bullet, bullet shooting, and bullet resetting
+                         ;;      1.3 - added in shield drawings
+                         ;;      1.4 - completion of shield hit detection and bullet reset
+                         ;;============================================================================
+                         ;;============================================================================
+                         ;; Ports and related constants.
+                         ;;============================================================================
+                         CONSTANT stax, 00                  ; port for 8-bit start-x
+                         CONSTANT stay, 01                  ; port for 8-bit start-y
+                         CONSTANT endx, 02                  ; port for 8-bit end-x
+                         CONSTANT endy, 03                  ; port for 8-bit end-y
+                         CONSTANT busy, 04                  ; port for 8-bit busy
+                         CONSTANT beam, 05                  ; port for 8-bit beam
+                         CONSTANT mode, 06                  ; port for 8-bit mode
+                         CONSTANT prng, 07                  ; port for 8-bit prng
+                         CONSTANT leds_lo, 08               ; port for 8-bit led data out
+                         CONSTANT leds_hi, 09               ; port for 8-bit led data out
+                         CONSTANT qssd_lo, 0A               ; port for 8-bit qssd data out
+                         CONSTANT qssd_hi, 0B               ; port for 8-bit qssd data out
+                         CONSTANT qssd_dp, 0C               ; port for 8-bit qssd data out
+                         CONSTANT switches_lo, 0D           ; port for 8-bit switch input
+                         CONSTANT switches_hi, 0E           ; port for 8-bit switch input
+                         CONSTANT buttons, 0F               ; port for 8-bit button input
+                         CONSTANT busy_go, 01               ; go command and busy status
+                         CONSTANT beam_hi, 0F               ; beam high intensity
+                         CONSTANT beam_md, 07               ; beam med intensity
+                         CONSTANT beam_lo, 03               ; beam low intensity
+                         CONSTANT mode_hld, 00              ; mode hold framebuffer
+                         CONSTANT mode_clr, 01              ; mode clear framebuffer
+                         CONSTANT mode_lin, 02              ; mode linear decay
+                         CONSTANT mode_exp, 03              ; mode exponential decay
+                         CONSTANT buttons_ct, 10            ; center
+                         CONSTANT buttons_up, 08            ; up
+                         CONSTANT buttons_dn, 04            ; down
+                         CONSTANT buttons_lf, 02            ; left
+                         CONSTANT buttons_rt, 01            ; right
+                         ;;============================================================================
+                         ;; Game state declarations.
+                         ;;============================================================================
+                         NAMEREG s0, gs_major
+                         CONSTANT gs_major_attrone, 00      ; state assignment
+                         CONSTANT gs_major_attrtwo, 01      ; state assignment
+                         CONSTANT gs_major_playing, 02      ; state assignment
+                         CONSTANT gs_major_gameend, 03      ; state assignment
+                         NAMEREG s1, gs_minor
+                         CONSTANT gs_minor_begins, 00       ; counter initialize
+                         CONSTANT gs_minor_twosec, 78       ; frame count about 2.0 secs
+                         CONSTANT gs_minor_onesec, 3C       ; frame count about 1.0 secs
+                         CONSTANT gs_minor_getrdy, 1E       ; frame count about 0.5 secs
+                         NAMEREG s2, gs_tbulletx
+                         NAMEREG s3, gs_tbullety
+                         NAMEREG s4, gs_tbulletdy
+                         CONSTANT gs_tbullet_xdim, 00       ; it's this plus 1
+                         CONSTANT gs_tbullet_ydim, 05       ; it's this plus 1
+                         CONSTANT gs_tbullet_speed, 08      ; pixels per frame
+                         NAMEREG s5, gs_tankx
+                         CONSTANT gs_tanky, F4              ; tank y location
+                         CONSTANT gs_tank_xdim, 10          ; it's this plus 1
+                         CONSTANT gs_tank_ydim, 08          ; it's this plus 1
+                         CONSTANT gs_tank_speed, 02         ; pixels per frame
+                         NAMEREG s6, shieldshp              ; health register counter for 4 shields: 00 00 00 00
+                         CONSTANT shield1hit, 40            ; add to shieldshp when shield 1 is hit: 01 00 00 00
+                         CONSTANT shield2hit, 10            ; add to shieldshp when shield 2 is hit: 00 01 00 00
+                         CONSTANT shield3hit, 04            ; add to shieldshp when shield 3 is hit: 00 00 01 00
+                         CONSTANT shield4hit, 01            ; add to shieldshp when shield 4 is hit: 00 00 00 01
+                         CONSTANT shieldxdim, 18            ; shield x dimension is 24 pixels
+                         CONSTANT shieldydim, 14            ; shield y dimension is 20 pixels
+                         CONSTANT shield1x, 10              ; shield 1 starts at x = 16
+                         CONSTANT shield2x, 52              ; shield 2 starts at x = 82
+                         CONSTANT shield3x, 95              ; shield 3 starts at x = 149
+                         CONSTANT shield4x, D7              ; shield 4 starts at x = 215
+                         CONSTANT shieldy, E0               ; shield starts at y = 224
+                         CONSTANT alien_x, 00               ; scratchpad memory location
+                         CONSTANT alien_y, 01
+                         CONSTANT alien_1_hp, 02
+                         CONSTANT alien_2_hp, 03
+                         CONSTANT alien_3_hp, 04
+                         CONSTANT alien_4_hp, 05
+                         CONSTANT alien_5_hp, 06
+                         CONSTANT alien_x_dim, 08
+                         CONSTANT alien_y_dim, 02
+                         ;;============================================================================
+                         ;; Global variables.
+                         ;;============================================================================
+                         NAMEREG s7, resvd1                 ; reserved
+                         NAMEREG s8, resvd2                 ; reserved
+                         NAMEREG sC, resvd3                 ; reserved
+                         NAMEREG s9, xpos                   ; for drawing routines
+                         NAMEREG sA, ypos                   ; for drawing routines
+                         NAMEREG sB, tbullet_en             ; for tank bullet enable
+                         NAMEREG sD, btnsamp                ; button sample
+                         NAMEREG sE, loopvar                ; for loops
+                         NAMEREG sF, scratch                ; for scratch
+                         ;;============================================================================
+                         ;; Other stuff.
+                         ;;============================================================================
+                         CONSTANT minusone, FF              ; minusone
+                         CONSTANT minusmax, 80              ; minus 128
+                         CONSTANT plusmax, 7F               ; plus 127
+                         CONSTANT zero, 00                  ; zero
+                         CONSTANT one, 01                   ; one
+                         ;;============================================================================
+                         ;; Boot.
+                         ;; This performs one-time initialization of the hardware and the game state.
+                         ;;============================================================================
+                   boot: 
+                         CALL hw_init                       ; initial hardware setup
+                         CALL gs_init                       ; set initial game state
+                         ENABLE INTERRUPT                   ; enable vblnk interrupt
+                         ;;============================================================================
+                         ;; Main.
+                         ;; This is an empty loop, does nothing, waiting for interrupts to occur.
+                         ;;============================================================================
+                   main: 
+                         JUMP main                          ; empty loop, does nothing
+                         ;;============================================================================
+                         ;; Interrupt.
+                         ;; This is the main game logic.  At each interrupt, the procedure is to read
+                         ;; the user input, calculate the next game state, and then draw the game
+                         ;; state on the display.
+                         ;;============================================================================
+                    isr: 
+                         CALL user_input                    ; get the user input
+                         CALL calc_next_gs                  ; calculate next state
+                         CALL draw_gs                       ; draw the state
+                         RETURNI ENABLE                     ; return with enable
+                         ;;============================================================================
+                         ;; Subroutine: hw_init
+                         ;; This puts the hardware into a known, initial state.  This includes a wait
+                         ;; to make sure the line drawing harware is idle (a wait loop which is also
+                         ;; called from other routines, as a subroutine).
+                         ;;============================================================================
+                hw_init: 
+                         LOAD scratch, zero                 ; going to use lot of zero
+                         OUTPUT scratch, leds_lo            ; turn off lo leds
+                         OUTPUT scratch, leds_hi            ; turn off hi leds
+                         OUTPUT scratch, qssd_lo            ; zeroize qssd lo
+                         OUTPUT scratch, qssd_hi            ; zeroize qssd hi
+                         OUTPUT scratch, qssd_dp            ; turn off qssd dots
+                         LOAD scratch, mode_exp             ; load desired mode
+                         OUTPUT scratch, mode               ; program the framebuffer
+                         LOAD scratch, beam_hi              ; load desired beam
+                         OUTPUT scratch, beam               ; program the framebuffer
+           hw_init_wait: 
+                         INPUT scratch, busy                ; get framebuffer busy
+                         COMPARE scratch, busy_go           ; check framebuffer busy
+                         JUMP Z, hw_init_wait               ; back to wait if busy
+                         RETURN                             ; return
+                         ;;============================================================================
+                         ;; Subroutine: gs_init
+                         ;; This puts the game into a known, initial state.  I've assigned all of the
+                         ;; game state to a known value -- although some of these assignments do not
+                         ;; really matter based on design of the game state machine.
+                         ;;============================================================================
+                gs_init: 
+                         LOAD gs_major, gs_major_attrone    ; start in attract mdoe
+                         LOAD gs_minor, gs_minor_begins     ; start with counter zero
+                         LOAD gs_tbulletx, zero             ; doesn't really matter
+                         LOAD gs_tbullety, zero             ; doesn't really matter
+                         LOAD gs_tankx, zero                ; doesn't really matter
+                         LOAD gs_tbulletdy, zero            ; doesn't really matter
+                         LOAD tbullet_en, zero              ; start with top button not pressed
+                         LOAD scratch, zero                 ; loads zero to scratch
+                         STORE scratch, alien_x             ; aliens start at 0,0
+                         STORE scratch, alien_y             ; aliens start at 0,0
+                         LOAD scratch, FF                   ; loads ff to scratch
+                         STORE scratch, alien_1_hp          ; sets full health to aliens
+                         STORE scratch, alien_2_hp          ; sets full health to aliens
+                         STORE scratch, alien_3_hp          ; sets full health to aliens
+                         STORE scratch, alien_4_hp          ; sets full health to aliens
+                         STORE scratch, alien_5_hp          ; sets full health to aliens
+                         RETURN                             ; return
+                         ;;============================================================================
+                         ;; Subroutine: user_input
+                         ;; This samples the user inputs required for this game (which happens to be
+                         ;; only the buttons, but this could is extended to the switches as well).
+                         ;; This subroutine calls an example of how to use the RAM scratchpad, by
+                         ;; implementing access of a 256x8 array using switches, button, and qssd.
+                         ;; The call to the ram_example routine (and ram_example routine itself)
+                         ;; can be entirely removed as it is not needed in this game.
+                         ;;============================================================================
+             user_input: 
+                         INPUT btnsamp, buttons             ; sample button hardware
+                         RETURN                             ; return
+                         ;;============================================================================
+                         ;; Subroutine: calc_next_gs
+                         ;; This logic calculates the next state of the game, given the sampled user
+                         ;; inputs and the current state of the game.
+                         ;;============================================================================
+           calc_next_gs: 
+                         COMPARE gs_major, gs_major_attrone ; are we in attrone?
+                         JUMP Z, calc_attrone               ; do ns calc for attrone
+                         COMPARE gs_major, gs_major_attrtwo ; are we in attrtwo?
+                         JUMP Z, calc_attrtwo               ; do ns calc for attrtwo
+                         COMPARE gs_major, gs_major_playing ; are we in playing?
+                         JUMP Z, calc_playing               ; do ns calc for playing
+                         COMPARE gs_major, gs_major_gameend ; are we in gameend?
+                         JUMP Z, calc_gameend               ; do ns calc for gameend
+                         RETURN 
+           calc_attrone: 
+                         TEST btnsamp, buttons_ct           ; starts game if center button is pressed
+                         JUMP NZ, initial_positions         ; othersize, swap between bong and ec
+                         COMPARE gs_minor, gs_minor_twosec  ; attrone is bong, attrtwo is ec
+                         JUMP Z, goto_attrtwo
+                         ADD gs_minor, one
+                         RETURN 
+           calc_attrtwo: 
+                         TEST btnsamp, buttons_ct
+                         JUMP NZ, initial_positions
+                         COMPARE gs_minor, gs_minor_onesec
+                         JUMP Z, goto_attrone
+                         ADD gs_minor, one
+                         RETURN 
+      initial_positions: 
+                         LOAD gs_tankx, gs_tank_xdim        ; start tank at the bottom horizontal center of screen
+                         SRX gs_tankx
+                         XOR gs_tankx, minusone
+                         ADD gs_tankx, one
+                         ADD gs_tankx, minusmax
+                         LOAD scratch, gs_tankx             ; start bullet at the upper center of the tank
+                         ADD scratch, 08
+                         LOAD gs_tbulletx, scratch
+                         LOAD scratch, gs_tanky
+                         SUB scratch, 03
+                         LOAD gs_tbullety, scratch
+                         LOAD gs_major, gs_major_playing
+                         LOAD gs_minor, gs_minor_begins
+                         RETURN 
+           calc_playing: 
+                         CALL upd_tank                      ; go to update tank position
+                         TEST btnsamp, buttons_up           ; check if the top button was pushed
+                         CALL NZ, load_tbullet_en           ; if it was, enable bullet enable
+                         COMPARE tbullet_en, zero           ; check if bullet enable is enabled
+                         CALL NZ, upd_tbullet               ; if it is, update shot bullet position
+                         CALL upd_aliens
+                         RETURN 
+             upd_aliens: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 87                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         COMPARE scratch, 00
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         FETCH scratch, alien_y
+                         TEST scratch, 01
+                         CALL NC, upd_aliens_x_left
+                         CALL C, upd_aliens_x_right
+                         FETCH scratch, alien_y
+                         COMPARE scratch, BE
+                         CALL Z, goto_gameend               ; end the game if aliens reach end
+                         RETURN 
+     upd_aliens_x_right: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         ADD scratch, one                   ; adds one to scratch
+                         STORE scratch, alien_x             ; store scratch back into alien x position
+                         RETURN 
+      upd_aliens_x_left: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         SUB scratch, one                   ; sub one to scratch
+                         STORE scratch, alien_x             ; store scratch back into alien x position
+                         RETURN 
+           upd_aliens_y: 
+                         FETCH scratch, alien_y             ; store alien y position to scratch
+                         ADD scratch, 05                    ; adds one to scratch
+                         STORE scratch, alien_y             ; store scratch back into alien y position
+                         RETURN 
+               upd_tank: 
+                         LOAD scratch, zero                 ; update tank position
+                         TEST btnsamp, buttons_lf
+                         SUBCY scratch, zero
+                         TEST btnsamp, buttons_rt
+                         ADDCY scratch, zero
+                         COMPARE scratch, minusone
+                         CALL Z, upd_tank_lt
+                         COMPARE scratch, one
+                         CALL Z, upd_tank_rt
+                         COMPARE tbullet_en, zero           ; if bullet enable is 0, update unshot bullet x position
+                         RETURN NZ                          ; if bullet enable is 1, do not update bullet x position
+                         LOAD scratch, gs_tankx             ; update unshot bullet x position
+                         ADD scratch, 08
+                         LOAD gs_tbulletx, scratch
+                         RETURN 
+            upd_tank_lt: 
+                         SUB gs_tankx, gs_tank_speed
+                         RETURN NC
+                         LOAD gs_tankx, zero
+                         RETURN 
+            upd_tank_rt: 
+                         ADD gs_tankx, gs_tank_speed
+                         LOAD scratch, gs_tankx
+                         ADD scratch, gs_tank_xdim
+                         RETURN NC
+                         LOAD gs_tankx, minusone
+                         SUB gs_tankx, gs_tank_xdim
+                         RETURN 
+        load_tbullet_en: 
+                         LOAD tbullet_en, one               ; enable bullet enable
+                         RETURN 
+            upd_tbullet: 
+                         LOAD loopvar, gs_tbullet_speed     ; loop for bullety moving up
+       upd_tbullet_loop: 
+                         SUB loopvar, one
+                         RETURN C                           ; needed for some reason I do not know... yet
+                         SUB gs_tbullety, one
+                         JUMP Z, reset_tbullet
+                         COMPARE gs_tbullety, shieldy
+                         JUMP Z, check_shield
+restart_upd_bullet_loop: 
+                         JUMP upd_tbullet_loop
+          reset_tbullet: ; reload bullet position when it hits something
+                         LOAD scratch, gs_tankx
+                         ADD scratch, 08
+                         LOAD gs_tbulletx, scratch
+                         LOAD scratch, gs_tanky
+                         SUB scratch, 03
+                         LOAD gs_tbullety, scratch
+                         LOAD tbullet_en, zero
+                         RETURN 
+           check_shield: ; check which shield region the bullet is in
+                         LOAD scratch, shield1x
+                         ADD scratch, shieldxdim
+                         COMPARE gs_tbulletx, scratch
+                         JUMP C, check_shield1
+                         LOAD scratch, shield2x
+                         ADD scratch, shieldxdim
+                         COMPARE gs_tbulletx, scratch
+                         JUMP C, check_shield2
+                         LOAD scratch, shield3x
+                         ADD scratch, shieldxdim
+                         COMPARE gs_tbulletx, scratch
+                         JUMP C, check_shield3
+                         LOAD scratch, shield4x
+                         ADD scratch, shieldxdim
+                         COMPARE gs_tbulletx, scratch
+                         JUMP C, check_shield4
+                         JUMP restart_upd_bullet_loop
+          check_shield1: ; check if the bullet hit shield 1
+                         LOAD scratch, shield1x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield1x
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, reset_tbullet
+                         RETURN 
+          check_shield2: ; check if the bullet hit shield 2
+                         LOAD scratch, shield2x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield2x
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, reset_tbullet
+                         RETURN 
+          check_shield3: ; check if the bullet hit shield 3
+                         LOAD scratch, shield3x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield3x
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, reset_tbullet
+                         RETURN 
+          check_shield4: ; check if the bullet hit shield 4
+                         LOAD scratch, shield4x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield4x
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, reset_tbullet
+                         RETURN 
+           calc_gameend: 
+                         COMPARE gs_minor, gs_minor_onesec
+                         JUMP Z, goto_attrone
+                         ADD gs_minor, one
+                         RETURN 
+           goto_attrone: 
+                         LOAD gs_major, gs_major_attrone
+                         LOAD gs_minor, gs_minor_begins
+                         RETURN 
+           goto_attrtwo: 
+                         LOAD gs_major, gs_major_attrtwo
+                         LOAD gs_minor, gs_minor_begins
+                         RETURN 
+           goto_gameend: 
+                         LOAD gs_major, gs_major_gameend
+                         LOAD gs_minor, gs_minor_begins
+                         RETURN 
+                         ;;============================================================================
+                         ;; Subroutine: draw_gs
+                         ;; This uses the current game state as input, and draws it on the display.
+                         ;; This subroutine calls an example of how to output debug or diagnostic info
+                         ;; using the leds.  The call to the draw_gs_debug routine (and draw_gs_debug
+                         ;; routine itself) can be entirely remove as it is required to play the game.
+                         ;;============================================================================
+                draw_gs: 
+                         CALL draw_gs_debug                 ; for debug info display
+                         COMPARE gs_major, gs_major_attrone ; are we in attrone?
+                         JUMP Z, draw_attrone               ; do drawing for attrone
+                         COMPARE gs_major, gs_major_attrtwo ; are we in attrtwo?
+                         JUMP Z, draw_attrtwo               ; do drawing for attrtwo
+                         COMPARE gs_major, gs_major_playing ; are we in playing?
+                         JUMP Z, draw_playing               ; do drawing for playing
+                         COMPARE gs_major, gs_major_gameend ; are we in gameend?
+                         JUMP Z, draw_gameend               ; do drawing for gameend
+                         RETURN                             ; return
+          draw_gs_debug: 
+                         OUTPUT gs_major, leds_hi           ; debug display on leds
+                         OUTPUT gs_minor, leds_lo           ; debug display on leds
+                         RETURN                             ; return
+           draw_attrone: 
+                         LOAD xpos, 28                      ; draw letter b
+                         LOAD ypos, 50
+                         CALL moveto
+                         LOAD xpos, 28
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 48
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 48
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 28
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 58                      ; draw letter o
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 58
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 78
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 78
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 58
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 88                      ; draw letter n
+                         LOAD ypos, 90
+                         CALL moveto
+                         LOAD xpos, 88
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, A8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, A8
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, B8                      ; draw letter g
+                         LOAD ypos, B0
+                         CALL moveto
+                         LOAD xpos, D8
+                         LOAD ypos, B0
+                         CALL drawto
+                         LOAD xpos, D8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, B8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, B8
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, D8
+                         LOAD ypos, 90
+                         CALL drawto
+                         RETURN 
+           draw_attrtwo: 
+                         LOAD xpos, 78                      ; draw letter e
+                         LOAD ypos, 90
+                         CALL moveto
+                         LOAD xpos, 58
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 58
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 78
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 58
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, A8                      ; draw letter c
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 88
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 88
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, A8
+                         LOAD ypos, 90
+                         CALL drawto
+                         RETURN 
+           draw_playing: 
+                         LOAD xpos, gs_tbulletx             ; draw bullet
+                         LOAD ypos, gs_tbullety
+                         CALL moveto
+                         LOAD xpos, gs_tbulletx
+                         LOAD ypos, gs_tbullety
+                         ADD ypos, gs_tbullet_ydim
+                         CALL drawto
+                         LOAD xpos, gs_tankx                ; draw tank
+                         LOAD ypos, gs_tanky
+                         CALL moveto
+                         LOAD xpos, gs_tankx
+                         LOAD ypos, gs_tanky
+                         ADD ypos, gs_tank_ydim
+                         CALL drawto
+                         LOAD xpos, gs_tankx
+                         LOAD ypos, gs_tanky
+                         ADD xpos, gs_tank_xdim
+                         ADD ypos, gs_tank_ydim
+                         CALL drawto
+                         LOAD xpos, gs_tankx
+                         LOAD ypos, gs_tanky
+                         ADD xpos, gs_tank_xdim
+                         CALL drawto
+                         LOAD xpos, gs_tankx
+                         LOAD ypos, gs_tanky
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield1x                ; draw shield 1 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 2
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 3
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 4
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 5
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield2x                ; draw shield 2 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 2
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 3
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 4
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 5
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield3x                ; draw shield 3 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 2
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 3
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 4
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 5
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield4x                ; draw shield 4 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 2
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 3
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 4
+                         LOAD ypos, shieldy
+                         SUB ypos, 0E
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 5
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 1st alien
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 2st alien
+                         ADD scratch, 10
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 3st alien
+                         ADD scratch, 20
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 4st alien
+                         ADD scratch, 30
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 5st alien
+                         ADD scratch, 40
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 6st alien
+                         ADD scratch, 50
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 7st alien
+                         ADD scratch, 60
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 8st alien
+                         ADD scratch, 70
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 9st alien
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 10st alien
+                         ADD scratch, 10
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 11st alien
+                         ADD scratch, 20
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 12st alien
+                         ADD scratch, 30
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 13st alien
+                         ADD scratch, 40
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 14st alien
+                         ADD scratch, 50
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 15st alien
+                         ADD scratch, 60
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 16st alien
+                         ADD scratch, 70
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 17st alien
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 18st alien
+                         ADD scratch, 10
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 19st alien
+                         ADD scratch, 20
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 20st alien
+                         ADD scratch, 30
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 21st alien
+                         ADD scratch, 40
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 22st alien
+                         ADD scratch, 50
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 23st alien
+                         ADD scratch, 60
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 24st alien
+                         ADD scratch, 70
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 25st alien
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 26st alien
+                         ADD scratch, 10
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 27st alien
+                         ADD scratch, 20
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 28st alien
+                         ADD scratch, 30
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 29st alien
+                         ADD scratch, 40
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 30st alien
+                         ADD scratch, 50
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 31st alien
+                         ADD scratch, 60
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         FETCH scratch, alien_x             ;draw 32st alien
+                         ADD scratch, 70
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+                         RETURN 
+           draw_gameend: 
+                         LOAD xpos, 48                      ; draw letter d
+                         LOAD ypos, 50
+                         CALL moveto
+                         LOAD xpos, 48
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 28
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 28
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 48
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 58                      ; draw letter o
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 58
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 78
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 78
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 58
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 88                      ; draw letter n
+                         LOAD ypos, 90
+                         CALL moveto
+                         LOAD xpos, 88
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, A8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, A8
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, D8                      ; draw letter e
+                         LOAD ypos, 90
+                         CALL moveto
+                         LOAD xpos, B8
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, B8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, D8
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, B8
+                         LOAD ypos, 90
+                         CALL drawto
+                         RETURN 
+                         ;;============================================================================
+                         ;; Subroutine: moveto and drawto
+                         ;; The moveto routine uses the global variables xpos and ypos, and the drawto
+                         ;; routine uses these global variables as well as the endpoint coordinates in
+                         ;; the display controller.  Moveto simply copies xpos and ypos into endpoint
+                         ;; coordinates in the display controller, it does not draw anything.  The
+                         ;; drawto routine copies endpoint coordinates to startpoint coordinates (does
+                         ;; not matter if the endpoint was from an actual draw, or simply an update
+                         ;; by moveto) and then copies xpos and ypos into endpoint coordinates, then
+                         ;; starts a linedraw.
+                         ;;============================================================================
+                 moveto: 
+                         OUTPUT xpos, endx                  ; copy global to hardware
+                         OUTPUT ypos, endy                  ; copy global to hardware
+                         RETURN                             ; return
+                 drawto: 
+                         INPUT scratch, endx                ; read hardware
+                         OUTPUT scratch, stax               ; write hardware
+                         OUTPUT xpos, endx                  ; copy global to hardware
+                         INPUT scratch, endy                ; read hardware
+                         OUTPUT scratch, stay               ; write hardware
+                         OUTPUT ypos, endy                  ; copy global to hardware
+                         LOAD scratch, busy_go              ; prepare the command
+                         OUTPUT scratch, busy               ; send the command
+                         CALL hw_init_wait                  ; wait line draw done
+                         RETURN                             ; return
+                         ;;============================================================================
+                         ;; Interrupt - Vector.
+                         ;;============================================================================
+                         ADDRESS 7FF                        ; must be located here
+             isr_vector: 
+                         JUMP isr                           ; always jump to isr
+                         ;;============================================================================
+                         ;;
+                         ;;============================================================================
