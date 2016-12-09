@@ -235,6 +235,15 @@
                          LOAD gs_tbullety, scratch
                          LOAD gs_major, gs_major_playing
                          LOAD gs_minor, gs_minor_begins
+                         LOAD scratch, zero                 ; loads zero to scratch
+                         STORE scratch, alien_x             ; aliens start at 0,0
+                         STORE scratch, alien_y             ; aliens start at 0,0
+                         LOAD scratch, FF                   ; loads ff to scratch
+                         STORE scratch, alien_1_hp          ; sets full health to aliens
+                         STORE scratch, alien_2_hp          ; sets full health to aliens
+                         STORE scratch, alien_3_hp          ; sets full health to aliens
+                         STORE scratch, alien_4_hp          ; sets full health to aliens
+                         STORE scratch, alien_5_hp          ; sets full health to aliens
                          RETURN 
            calc_playing: 
                          CALL upd_tank                      ; go to update tank position
@@ -692,7 +701,13 @@ restart_upd_bullet_loop:
                          LOAD xpos, shield4x                ; draw shield 4 side 8
                          LOAD ypos, shieldy
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 1st alien
+                         CALL draw_alien_1
+                         RETURN 
+           draw_alien_1: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 01
+                         JUMP NC, draw_alien_2
+                         FETCH scratch, alien_x             ;draw 1 alien
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
@@ -705,7 +720,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 2st alien
+           draw_alien_2: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 02
+                         JUMP NC, draw_alien_3
+                         FETCH scratch, alien_x             ;draw 2 alien
                          ADD scratch, 10
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -719,7 +738,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 3st alien
+           draw_alien_3: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 04
+                         JUMP NC, draw_alien_3
+                         FETCH scratch, alien_x             ;draw 3 alien
                          ADD scratch, 20
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -733,7 +756,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 4st alien
+           draw_alien_4: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 08
+                         JUMP NC, draw_alien_5
+                         FETCH scratch, alien_x             ;draw 4 alien
                          ADD scratch, 30
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -747,7 +774,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 5st alien
+           draw_alien_5: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 10
+                         JUMP NC, draw_alien_6
+                         FETCH scratch, alien_x             ;draw 5 alien
                          ADD scratch, 40
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -761,7 +792,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 6st alien
+           draw_alien_6: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 20
+                         JUMP NC, draw_alien_7
+                         FETCH scratch, alien_x             ;draw 6 alien
                          ADD scratch, 50
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -775,7 +810,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 7st alien
+           draw_alien_7: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 40
+                         JUMP NC, draw_alien_8
+                         FETCH scratch, alien_x             ;draw 7 alien
                          ADD scratch, 60
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -789,7 +828,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 8st alien
+           draw_alien_8: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 80
+                         JUMP NC, draw_alien_9
+                         FETCH scratch, alien_x             ;draw 8 alien
                          ADD scratch, 70
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -803,7 +846,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 9st alien
+           draw_alien_9: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 01
+                         JUMP NC, draw_alien_10
+                         FETCH scratch, alien_x             ;draw 9 alien
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 08
@@ -817,7 +864,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 10st alien
+          draw_alien_10: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 02
+                         JUMP NC, draw_alien_11
+                         FETCH scratch, alien_x             ;draw 10 alien
                          ADD scratch, 10
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -832,7 +883,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 11st alien
+          draw_alien_11: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 04
+                         JUMP NC, draw_alien_12
+                         FETCH scratch, alien_x             ;draw 11 alien
                          ADD scratch, 20
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -847,7 +902,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 12st alien
+          draw_alien_12: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 08
+                         JUMP NC, draw_alien_13
+                         FETCH scratch, alien_x             ;draw 12 alien
                          ADD scratch, 30
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -862,7 +921,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 13st alien
+          draw_alien_13: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 10
+                         JUMP NC, draw_alien_14
+                         FETCH scratch, alien_x             ;draw 13 alien
                          ADD scratch, 40
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -877,7 +940,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 14st alien
+          draw_alien_14: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 20
+                         JUMP NC, draw_alien_15
+                         FETCH scratch, alien_x             ;draw 14 alien
                          ADD scratch, 50
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -892,7 +959,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 15st alien
+          draw_alien_15: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 40
+                         JUMP NC, draw_alien_16
+                         FETCH scratch, alien_x             ;draw 15 alien
                          ADD scratch, 60
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -907,7 +978,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 16st alien
+          draw_alien_16: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 80
+                         JUMP NC, draw_alien_17
+                         FETCH scratch, alien_x             ;draw 16 alien
                          ADD scratch, 70
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -922,7 +997,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 17st alien
+          draw_alien_17: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 01
+                         JUMP NC, draw_alien_18
+                         FETCH scratch, alien_x             ;draw 17 alien
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 10
@@ -936,7 +1015,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 18st alien
+          draw_alien_18: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 02
+                         JUMP NC, draw_alien_19
+                         FETCH scratch, alien_x             ;draw 18 alien
                          ADD scratch, 10
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -951,7 +1034,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 19st alien
+          draw_alien_19: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 04
+                         JUMP NC, draw_alien_20
+                         FETCH scratch, alien_x             ;draw 19 alien
                          ADD scratch, 20
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -966,7 +1053,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 20st alien
+          draw_alien_20: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 08
+                         JUMP NC, draw_alien_21
+                         FETCH scratch, alien_x             ;draw 20 alien
                          ADD scratch, 30
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -981,7 +1072,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 21st alien
+          draw_alien_21: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 10
+                         JUMP NC, draw_alien_22
+                         FETCH scratch, alien_x             ;draw 21 alien
                          ADD scratch, 40
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -996,7 +1091,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 22st alien
+          draw_alien_22: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 20
+                         JUMP NC, draw_alien_23
+                         FETCH scratch, alien_x             ;draw 22 alien
                          ADD scratch, 50
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1011,7 +1110,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 23st alien
+          draw_alien_23: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 40
+                         JUMP NC, draw_alien_24
+                         FETCH scratch, alien_x             ;draw 23 alien
                          ADD scratch, 60
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1026,7 +1129,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 24st alien
+          draw_alien_24: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 80
+                         JUMP NC, draw_alien_25
+                         FETCH scratch, alien_x             ;draw 24 alien
                          ADD scratch, 70
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1041,7 +1148,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 25st alien
+          draw_alien_25: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 01
+                         JUMP NC, draw_alien_26
+                         FETCH scratch, alien_x             ;draw 25 alien
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 18
@@ -1055,7 +1166,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 26st alien
+          draw_alien_26: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 02
+                         JUMP NC, draw_alien_27
+                         FETCH scratch, alien_x             ;draw 26 alien
                          ADD scratch, 10
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1070,7 +1185,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 27st alien
+          draw_alien_27: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 04
+                         JUMP NC, draw_alien_28
+                         FETCH scratch, alien_x             ;draw 27 alien
                          ADD scratch, 20
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1085,7 +1204,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 28st alien
+          draw_alien_28: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 08
+                         JUMP NC, draw_alien_29
+                         FETCH scratch, alien_x             ;draw 28 alien
                          ADD scratch, 30
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1100,7 +1223,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 29st alien
+          draw_alien_29: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 10
+                         JUMP NC, draw_alien_30
+                         FETCH scratch, alien_x             ;draw 29 alien
                          ADD scratch, 40
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1115,7 +1242,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 30st alien
+          draw_alien_30: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 20
+                         JUMP NC, draw_alien_31
+                         FETCH scratch, alien_x             ;draw 30 alien
                          ADD scratch, 50
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1130,7 +1261,11 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 31st alien
+          draw_alien_31: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 40
+                         JUMP NC, draw_alien_32
+                         FETCH scratch, alien_x             ;draw 31 alien
                          ADD scratch, 60
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
@@ -1145,11 +1280,165 @@ restart_upd_bullet_loop:
                          CALL drawto
                          SUB ypos, alien_y_dim
                          CALL drawto
-                         FETCH scratch, alien_x             ;draw 32st alien
+          draw_alien_32: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 80
+                         JUMP NC, draw_alien_33
+                         FETCH scratch, alien_x             ;draw 32 alien
                          ADD scratch, 70
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 18
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_33: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 01
+                         JUMP NC, draw_alien_34
+                         FETCH scratch, alien_x             ;draw 33 alien
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_34: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 02
+                         JUMP NC, draw_alien_35
+                         FETCH scratch, alien_x             ;draw 34 alien
+                         ADD scratch, 10
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_35: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 04
+                         JUMP NC, draw_alien_36
+                         FETCH scratch, alien_x             ;draw 35 alien
+                         ADD scratch, 20
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_36: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 08
+                         JUMP NC, draw_alien_37
+                         FETCH scratch, alien_x             ;draw 36 alien
+                         ADD scratch, 30
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_37: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 10
+                         JUMP NC, draw_alien_38
+                         FETCH scratch, alien_x             ;draw 37 alien
+                         ADD scratch, 40
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_38: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 20
+                         JUMP NC, draw_alien_39
+                         FETCH scratch, alien_x             ;draw 38 alien
+                         ADD scratch, 50
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_39: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 40
+                         JUMP NC, draw_alien_39
+                         FETCH scratch, alien_x             ;draw 39 alien
+                         ADD scratch, 60
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         LOAD ypos, scratch
+                         CALL moveto
+                         ADD xpos, alien_x_dim
+                         CALL drawto
+                         ADD ypos, alien_y_dim
+                         CALL drawto
+                         SUB xpos, alien_x_dim
+                         CALL drawto
+                         SUB ypos, alien_y_dim
+                         CALL drawto
+          draw_alien_40: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 80
+                         FETCH scratch, alien_x             ;draw 40 alien
+                         ADD scratch, 70
+                         LOAD xpos, scratch
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
                          LOAD ypos, scratch
                          CALL moveto
                          ADD xpos, alien_x_dim
