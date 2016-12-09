@@ -368,83 +368,242 @@ draw_gs_debug: OUTPUT gs_major, leds_hi            ; debug display on leds
                OUTPUT gs_minor, leds_lo            ; debug display on leds
                RETURN                              ; return
 
- draw_attrone: LOAD xpos, 28 ; draw letter b
-               LOAD ypos, 50
-               CALL moveto
-               LOAD xpos, 28
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 48
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 28
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58 ; draw letter o
-               LOAD ypos, 70
-               CALL moveto
-               LOAD xpos, 58
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, 88 ; draw letter n
-               LOAD ypos, 90
-               CALL moveto
-               LOAD xpos, 88
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, a8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, b8 ; draw letter g
-               LOAD ypos, b0
-               CALL moveto
-               LOAD xpos, d8
-               LOAD ypos, b0
-               CALL drawto
-               LOAD xpos, d8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 70
-               CALL drawto
-               LOAD xpos, b8
-               LOAD ypos, 90
-               CALL drawto
-               LOAD xpos, d8
-               LOAD ypos, 90
-               CALL drawto
+ draw_attrone: 	LOAD xpos, 3a ; draw letter S
+				LOAD ypos, 70
+				CALL moveto
+				LOAD xpos, 4e ; 1
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, 4e ; 2
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, 3e ; 3
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, 3e ; 4
+				LOAD ypos, 7e
+				CALL drawto
+				LOAD xpos, 4e ; 5
+				LOAD ypos, 7e
+				CALL drawto
+				LOAD xpos, 4e ; 6
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 3a ; 7
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 3a ; 8
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, 4a ; 9
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, 4a ; 10
+				LOAD ypos, 82
+				CALL drawto
+				LOAD xpos, 3a ; 11
+				LOAD ypos, 82
+				CALL drawto
+				LOAD xpos, 3a ; 12
+				LOAD ypos, 70
+				CALL drawto
+ 
+				LOAD xpos, 58 ; draw letter p
+				LOAD ypos, 70
+				CALL moveto
+				LOAD xpos, 6c ; 1
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, 6c ; 2
+				LOAD ypos, 80
+				CALL drawto
+				LOAD xpos, 5c ; 3
+				LOAD ypos, 80
+				CALL drawto
+				LOAD xpos, 5c ; 4
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 58 ; 5
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 58 ; 6
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, 5c ; drawing inside of p
+				LOAD ypos, 74
+				CALL moveto
+				LOAD xpos, 69 ; 7
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, 69 ; 8
+				LOAD ypos, 7c
+				CALL drawto
+				LOAD xpos, 5c ; 9
+				LOAD ypos, 7c
+				CALL drawto
+				LOAD xpos, 5c ; 10
+				LOAD ypos, 74
+				CALL drawto
+				
+				LOAD xpos, 7d ; draw letter A
+				LOAD ypos, 70 
+				CALL moveto
+				LOAD xpos, 82 ; 1
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, 8a ; 2
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 86 ; 3
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 84 ; 4
+				LOAD ypos, 83
+				CALL drawto
+				LOAD xpos, 7c ; 5
+				LOAD ypos, 83
+				CALL drawto
+				LOAD xpos, 7a ; 6
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 76 ; 7
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 7d ; 8
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, 7d ; drawing inside of A
+				LOAD ypos, 7d
+				CALL moveto
+				LOAD xpos, 7f ; 9
+				LOAD ypos, 73
+				CALL drawto
+				LOAD xpos, 82 ; 10
+				LOAD ypos, 7d
+				CALL drawto
+				LOAD xpos, 7d ; 11
+				LOAD ypos, 7d
+				CALL drawto
+				
+				LOAD xpos, 94 ; drawing C
+				LOAD ypos, 70
+				CALL moveto
+				LOAD xpos, a8 ; 1
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, a8 ; 2
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, 98 ; 3
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, 98 ; 4
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, a8 ; 5
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, a8 ; 6
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 94 ; 7
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, 94 ; 8
+				LOAD ypos, 70
+				CALL drawto
+				
+				LOAD xpos, b2 ; draw e
+				LOAD ypos, 70
+				CALL moveto
+				LOAD xpos, c6 ; 1
+				LOAD ypos, 70
+				CALL drawto
+				LOAD xpos, c6 ; 2
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, b6 ; 3
+				LOAD ypos, 74
+				CALL drawto
+				LOAD xpos, b6 ; 4
+				LOAD ypos, 7e
+				CALL drawto
+				LOAD xpos, c4 ; 5
+				LOAD ypos, 7e
+				CALL drawto
+				LOAD xpos, c4 ; 6
+				LOAD ypos, 82
+				CALL drawto
+				LOAD xpos, b6 ; 7
+				LOAD ypos, 82
+				CALL drawto
+				LOAD xpos, b6 ; 8
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, c6 ; 9
+				LOAD ypos, 8c
+				CALL drawto
+				LOAD xpos, c6 ; 10
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, b2 ; 11
+				LOAD ypos, 90
+				CALL drawto
+				LOAD xpos, b2 ; 12
+				LOAD ypos, 70
+				CALL drawto
+				
                RETURN
 
- draw_attrtwo: LOAD xpos, 78 ; draw letter e
-               LOAD ypos, 90
+ draw_attrtwo: LOAD xpos, 85 ; draw letter D
+               LOAD ypos, 70
                CALL moveto
-               LOAD xpos, 58
+			   LOAD xpos, 8d ; 1
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 8d ; 2
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 99 ; 3
+               LOAD ypos, 79
+               CALL drawto
+			   LOAD xpos, 94 ; 4
+               LOAD ypos, 87
+               CALL drawto
+			   LOAD xpos, 8d ; 5
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 85 ; 6
                LOAD ypos, 90
                CALL drawto
-               LOAD xpos, 58
+			   LOAD xpos, 85 ; 7
                LOAD ypos, 70
                CALL drawto
-               LOAD xpos, 78
-               LOAD ypos, 70
+               LOAD xpos, 89 ; inside of letter D
+               LOAD ypos, 74
                CALL drawto
-               LOAD xpos, 58
-               LOAD ypos, 90
+			   LOAD xpos, 8d ; 8
+               LOAD ypos, 78
                CALL drawto
+			   LOAD xpos, 91 ; 9
+               LOAD ypos, 7c
+               CALL drawto
+			   LOAD xpos, 95 ; 10
+               LOAD ypos, 80
+               CALL drawto
+			   LOAD xpos, 91 ; 11
+               LOAD ypos, 84
+               CALL drawto
+			   LOAD xpos, 8d ; 12
+               LOAD ypos, 88
+               CALL drawto
+			   LOAD xpos, 89 ; 13
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 89 ; 14
+               LOAD ypos, 74
+               CALL drawto
+			   
                LOAD xpos, a8 ; draw letter c
                LOAD ypos, 70
                CALL moveto

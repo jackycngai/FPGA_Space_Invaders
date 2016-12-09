@@ -24,7 +24,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='C:/Users/Jacky/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/impl_1'
+HD_PWD='C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders/FPGA_Space_Invaders.runs/impl_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log

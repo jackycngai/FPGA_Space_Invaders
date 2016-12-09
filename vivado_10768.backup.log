@@ -1,0 +1,27 @@
+#-----------------------------------------------------------
+# Vivado v2016.2 (64-bit)
+# SW Build 1577090 on Thu Jun  2 16:32:40 MDT 2016
+# IP Build 1577682 on Fri Jun  3 12:00:54 MDT 2016
+# Start of session at: Thu Dec 01 21:33:15 2016
+# Process ID: 10768
+# Current directory: C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent8088 C:\Users\daime\OneDrive\Documents\School\Semester 9\EE 178\SpaceInvaders\FPGA_Space_Invaders\FPGA_Space_Invaders.xpr
+# Log file: C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders/vivado.log
+# Journal file: C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project {C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders/FPGA_Space_Invaders.xpr}
+INFO: [ProjectBase 1-489] The host OS only allows 260 characters in a normal path. The project is stored in a path with more than 80 characters. If you experience issues with IP, Block Designs, or files not being found, please consider moving the project to a location with a shorter path. Alternately consider using the OS subst command to map part of the path to a drive letter.
+Current project path is 'C:/Users/daime/OneDrive/Documents/School/Semester 9/EE 178/SpaceInvaders/FPGA_Space_Invaders'
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository 'C:/Xilinx/Vivado/2016.2/data/ip'.
+WARNING: [IP_Flow 19-2162] IP 'framebuffer' is locked:
+* IP definition 'Block Memory Generator (8.3)' for IP 'framebuffer' has a different revision in the IP Catalog.
+Please select 'Report IP Status' from the 'Tools/Report' menu or run Tcl command 'report_ip_status' for more information.
+open_project: Time (s): cpu = 00:00:22 ; elapsed = 00:00:10 . Memory (MB): peak = 721.828 ; gain = 99.379
+update_compile_order -fileset sources_1
+exit
+INFO: [Common 17-206] Exiting Vivado at Thu Dec 01 21:33:41 2016...
