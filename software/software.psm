@@ -513,7 +513,7 @@ draw_gs_debug: OUTPUT gs_major, leds_hi            ; debug display on leds
 				LOAD ypos, 70
 				CALL drawto
 				
-				LOAD xpos, b2 ; draw e
+				LOAD xpos, b2 ; draw E
 				LOAD ypos, 70
 				CALL moveto
 				LOAD xpos, c6 ; 1
@@ -555,47 +555,192 @@ draw_gs_debug: OUTPUT gs_major, leds_hi            ; debug display on leds
 				
                RETURN
 
- draw_attrtwo: LOAD xpos, 85 ; draw letter D
+ draw_attrtwo: LOAD xpos, 0d ; draw letter I
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, 21 ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 21 ; 2
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 19 ; 3
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 19 ; 4
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 21 ; 5
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 21 ; 6
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 0d ; 7
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 0d ; 8
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 15 ; 9
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 15 ; 10
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 0d ; 11
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 0d ; 12
+               LOAD ypos, 70
+               CALL drawto
+ 
+			   LOAD xpos, 2b ; draw letter N
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, 30 ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 3b ; 2
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 3b ; 3
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 3f ; 4
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 3f ; 5
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 3a ; 6
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 2f ; 7
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 2f ; 8
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 2b ; 9
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 2b ; 10
+               LOAD ypos, 70
+               CALL drawto
+ 
+			   LOAD xpos, 49 ; draw letter V
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, 4d ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 53 ; 2
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 59 ; 3
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 5d ; 4
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 55 ; 5
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 51 ; 6
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 49 ; 7
+               LOAD ypos, 70
+               CALL drawto
+ 
+			   LOAD xpos, 6e ; draw letter A
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, 73 ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 7b ; 2
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 77 ; 3
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 74 ; 4
+               LOAD ypos, 83
+               CALL drawto
+			   LOAD xpos, 6d ; 5
+               LOAD ypos, 83
+               CALL drawto
+			   LOAD xpos, 6b ; 6
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 67 ; 7
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 6e ; 8
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 6e ; inside of A
+               LOAD ypos, 7d
+               CALL moveto
+			   LOAD xpos, 71 ; 9
+               LOAD ypos, 73
+               CALL drawto
+			   LOAD xpos, 73 ; 10
+               LOAD ypos, 7d
+               CALL drawto
+			   LOAD xpos, 6e ; 11
+               LOAD ypos, 7d
+               CALL drawto
+ 
+			   LOAD xpos, 85 ; draw letter D
                LOAD ypos, 70
                CALL moveto
 			   LOAD xpos, 8d ; 1
-               LOAD ypos, 74
-               CALL drawto
-			   LOAD xpos, 8d ; 2
-               LOAD ypos, 74
-               CALL drawto
-			   LOAD xpos, 99 ; 3
-               LOAD ypos, 79
-               CALL drawto
-			   LOAD xpos, 94 ; 4
-               LOAD ypos, 87
-               CALL drawto
-			   LOAD xpos, 8d ; 5
-               LOAD ypos, 8c
-               CALL drawto
-			   LOAD xpos, 85 ; 6
-               LOAD ypos, 90
-               CALL drawto
-			   LOAD xpos, 85 ; 7
                LOAD ypos, 70
                CALL drawto
-               LOAD xpos, 89 ; inside of letter D
+			   LOAD xpos, 91 ; 2
                LOAD ypos, 74
                CALL drawto
-			   LOAD xpos, 8d ; 8
-               LOAD ypos, 78
+			   LOAD xpos, 99 ; 4
+               LOAD ypos, 7c
                CALL drawto
-			   LOAD xpos, 91 ; 9
+			   LOAD xpos, 99 ; 5
+               LOAD ypos, 7f
+               CALL drawto
+			   LOAD xpos, 99 ; 6
+               LOAD ypos, 82
+               CALL drawto
+			   LOAD xpos, 91 ; 8
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, 8d ; 9
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 85 ; 10
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, 85 ; 11
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, 89 ; inside of letter D
+               LOAD ypos, 74
+               CALL moveto
+			   LOAD xpos, 8d ; 8
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, 95 ; 9
                LOAD ypos, 7c
                CALL drawto
 			   LOAD xpos, 95 ; 10
                LOAD ypos, 80
                CALL drawto
-			   LOAD xpos, 91 ; 11
+			   LOAD xpos, 95 ; 11
                LOAD ypos, 84
                CALL drawto
 			   LOAD xpos, 8d ; 12
-               LOAD ypos, 88
+               LOAD ypos, 8c
                CALL drawto
 			   LOAD xpos, 89 ; 13
                LOAD ypos, 8c
@@ -603,19 +748,134 @@ draw_gs_debug: OUTPUT gs_major, leds_hi            ; debug display on leds
 			   LOAD xpos, 89 ; 14
                LOAD ypos, 74
                CALL drawto
+               
 			   
-               LOAD xpos, a8 ; draw letter c
+               LOAD xpos, a2 ; draw letter E
                LOAD ypos, 70
                CALL moveto
-               LOAD xpos, 88
+			   LOAD xpos, b6 ; 1
                LOAD ypos, 70
                CALL drawto
-               LOAD xpos, 88
+			   LOAD xpos, b6 ; 2
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, a6 ; 3
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, a6 ; 4
+               LOAD ypos, 7e
+               CALL drawto
+			   LOAD xpos, b4 ; 5
+               LOAD ypos, 7e
+               CALL drawto
+			   LOAD xpos, b4 ; 6
+               LOAD ypos, 82
+               CALL drawto
+			   LOAD xpos, a6 ; 7
+               LOAD ypos, 82
+               CALL drawto
+			   LOAD xpos, a6 ; 8
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, b6 ; 9
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, b6 ; 10
                LOAD ypos, 90
                CALL drawto
-               LOAD xpos, a8
+			   LOAD xpos, a2 ; 11
                LOAD ypos, 90
                CALL drawto
+			   LOAD xpos, a2 ; 12
+               LOAD ypos, 70
+               CALL drawto
+			   
+			   LOAD xpos, c0 ; draw R
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, d4 ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, d4 ; 2
+               LOAD ypos, 80
+               CALL drawto
+			   LOAD xpos, ca ; 3
+               LOAD ypos, 80
+               CALL drawto
+			   LOAD xpos, d4 ; 4
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, d0 ; 5
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, c4 ; 6
+               LOAD ypos, 80
+               CALL drawto
+			   LOAD xpos, c4 ; 7
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, c0 ; 8
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, c0 ; 9
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, c4 ; Inside of R
+               LOAD ypos, 74
+               CALL moveto
+			   LOAD xpos, d0 ; 10
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, d0 ; 11
+               LOAD ypos, 7c
+               CALL drawto
+			   LOAD xpos, c4 ; 12
+               LOAD ypos, 7c
+               CALL drawto
+			   LOAD xpos, c4 ; 13
+               LOAD ypos, 74
+               CALL drawto
+			   
+			   LOAD xpos, de ; draw S
+               LOAD ypos, 70
+               CALL moveto
+			   LOAD xpos, f2 ; 1
+               LOAD ypos, 70
+               CALL drawto
+			   LOAD xpos, f2 ; 2
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, e2 ; 3
+               LOAD ypos, 74
+               CALL drawto
+			   LOAD xpos, e2 ; 4
+               LOAD ypos, 7e
+               CALL drawto
+			   LOAD xpos, f2 ; 5
+               LOAD ypos, 7e
+               CALL drawto
+			   LOAD xpos, f2 ; 6
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, de ; 7
+               LOAD ypos, 90
+               CALL drawto
+			   LOAD xpos, de ; 8
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, ee ; 9
+               LOAD ypos, 8c
+               CALL drawto
+			   LOAD xpos, ee ; 10
+               LOAD ypos, 82
+               CALL drawto
+			   LOAD xpos, de ; 11
+               LOAD ypos, 82
+               CALL drawto
+			   LOAD xpos, de ; 12
+               LOAD ypos, 70
+               CALL drawto
+			   
                RETURN
 
  draw_playing: LOAD xpos, gs_ballx ; draw ball
