@@ -97,6 +97,7 @@ CONSTANT shield1x		 , 10 ; shield 1 starts at x = 16
 CONSTANT shield2x		 , 52 ; shield 2 starts at x = 82
 CONSTANT shield3x		 , 95 ; shield 3 starts at x = 149
 CONSTANT shield4x		 , d7 ; shield 4 starts at x = 215
+CONSTANT shieldy		 , d0 ; shield starts at y = 208
 
 ;;============================================================================
 ;; Global variables.
