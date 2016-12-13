@@ -1422,7 +1422,7 @@ draw_alien_2:
 draw_alien_3:
 		FETCH scratch, alien_1_hp
 		TEST scratch, 04
-		JUMP NC, draw_alien_3
+		JUMP NC, draw_alien_4
 		FETCH scratch, alien_x ;draw 3 alien
 		ADD scratch, 20
 		LOAD xpos, scratch
@@ -2096,7 +2096,7 @@ draw_alien_38:
 draw_alien_39:
 		FETCH scratch, alien_5_hp
 		TEST scratch, 40
-		JUMP NC, draw_alien_39
+		JUMP NC, draw_alien_40
 		FETCH scratch, alien_x ;draw 39 alien
 		ADD scratch, 60
 		LOAD xpos, scratch
@@ -2115,6 +2115,7 @@ draw_alien_39:
 draw_alien_40:
 		FETCH scratch, alien_5_hp
 		TEST scratch, 80
+		RETURN NC
 		FETCH scratch, alien_x ;draw 40 alien
 		ADD scratch, 70
 		LOAD xpos, scratch
