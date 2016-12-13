@@ -420,7 +420,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_3
 		
 		FETCH scratch, alien_x
 		ADD scratch, 30
@@ -428,7 +428,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_4
 		
 		FETCH scratch, alien_x
 		ADD scratch, 40
@@ -436,7 +436,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_5
 		
 		FETCH scratch, alien_x
 		ADD scratch, 50
@@ -444,7 +444,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_6
 		
 		FETCH scratch, alien_x
 		ADD scratch, 60
@@ -452,7 +452,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_7
 		
 		FETCH scratch, alien_x
 		ADD scratch, 70
@@ -460,7 +460,7 @@ check_alien_5_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_5_hp_2
+		JUMP NC, check_alien_5_hp_8
 		JUMP restart_upd_bullet_loop
 check_alien_5_hp_1:
 		FETCH scratch, alien_5_hp
@@ -540,7 +540,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_3
 		
 		FETCH scratch, alien_x
 		ADD scratch, 30
@@ -548,7 +548,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_4
 		
 		FETCH scratch, alien_x
 		ADD scratch, 40
@@ -556,7 +556,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_5
 		
 		FETCH scratch, alien_x
 		ADD scratch, 50
@@ -564,7 +564,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_6
 		
 		FETCH scratch, alien_x
 		ADD scratch, 60
@@ -572,7 +572,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_7
 		
 		FETCH scratch, alien_x
 		ADD scratch, 70
@@ -580,7 +580,7 @@ check_alien_4_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_4_hp_2
+		JUMP NC, check_alien_4_hp_8
 		JUMP restart_upd_bullet_loop
 check_alien_4_hp_1:
 		FETCH scratch, alien_4_hp
@@ -660,7 +660,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_3
 		
 		FETCH scratch, alien_x
 		ADD scratch, 30
@@ -668,7 +668,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_4
 		
 		FETCH scratch, alien_x
 		ADD scratch, 40
@@ -676,7 +676,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_5
 		
 		FETCH scratch, alien_x
 		ADD scratch, 50
@@ -684,7 +684,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_6
 		
 		FETCH scratch, alien_x
 		ADD scratch, 60
@@ -692,7 +692,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_7
 		
 		FETCH scratch, alien_x
 		ADD scratch, 70
@@ -700,7 +700,7 @@ check_alien_3_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_3_hp_2
+		JUMP NC, check_alien_3_hp_8
 		JUMP restart_upd_bullet_loop
 check_alien_3_hp_1:
 		FETCH scratch, alien_3_hp
@@ -780,7 +780,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_3
 		
 		FETCH scratch, alien_x
 		ADD scratch, 30
@@ -788,7 +788,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_4
 		
 		FETCH scratch, alien_x
 		ADD scratch, 40
@@ -796,7 +796,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_5
 		
 		FETCH scratch, alien_x
 		ADD scratch, 50
@@ -804,7 +804,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_6
 		
 		FETCH scratch, alien_x
 		ADD scratch, 60
@@ -812,7 +812,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_7
 		
 		FETCH scratch, alien_x
 		ADD scratch, 70
@@ -820,7 +820,7 @@ check_alien_2_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_2_hp_2
+		JUMP NC, check_alien_2_hp_8
 		JUMP restart_upd_bullet_loop
 check_alien_2_hp_1:
 		FETCH scratch, alien_2_hp
@@ -900,7 +900,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_3
 		
 		FETCH scratch, alien_x
 		ADD scratch, 30
@@ -908,7 +908,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_4
 		
 		FETCH scratch, alien_x
 		ADD scratch, 40
@@ -916,7 +916,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_5
 		
 		FETCH scratch, alien_x
 		ADD scratch, 50
@@ -924,7 +924,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_6
 		
 		FETCH scratch, alien_x
 		ADD scratch, 60
@@ -932,7 +932,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_7
 		
 		FETCH scratch, alien_x
 		ADD scratch, 70
@@ -940,7 +940,7 @@ check_alien_1_hp:
 		JUMP NC, restart_upd_bullet_loop
 		ADD scratch, alien_x_dim
 		COMPARE scratch, gs_tbulletx
-		JUMP NC, check_alien_1_hp_2
+		JUMP NC, check_alien_1_hp_8
 		JUMP restart_upd_bullet_loop
 check_alien_1_hp_1:
 		FETCH scratch, alien_1_hp
