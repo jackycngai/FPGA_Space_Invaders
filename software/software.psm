@@ -94,6 +94,16 @@ CONSTANT shield3x		 , 95 ; shield 3 starts at x = 149
 CONSTANT shield4x		 , d7 ; shield 4 starts at x = 215
 CONSTANT shieldy		 , e0 ; shield starts at y = 224
 
+CONSTANT alien_x         , 00 ; scratchpad memory location
+CONSTANT alien_y         , 01
+CONSTANT alien_1_hp      , 02
+CONSTANT alien_2_hp      , 03
+CONSTANT alien_3_hp      , 04
+CONSTANT alien_4_hp      , 05
+CONSTANT alien_5_hp      , 06
+CONSTANT alien_x_dim     , 08
+CONSTANT alien_y_dim     , 02
+
 ;;============================================================================
 ;; Global variables.
 ;;============================================================================
@@ -189,6 +199,15 @@ gs_init:
 		LOAD gs_tankx, zero						; doesn't really matter
 		LOAD gs_tbulletdy, zero					; doesn't really matter
 		LOAD tbullet_en, zero					; start with top button not pressed
+		LOAD scratch, zero						; loads zero to scratch
+		STORE scratch, alien_x					; aliens start at 0,0
+		STORE scratch, alien_y					; aliens start at 0,0
+		LOAD scratch, ff						; loads ff to scratch
+		STORE scratch, alien_1_hp				; sets full health to aliens
+		STORE scratch, alien_2_hp				; sets full health to aliens
+		STORE scratch, alien_3_hp				; sets full health to aliens
+		STORE scratch, alien_4_hp				; sets full health to aliens
+		STORE scratch, alien_5_hp				; sets full health to aliens
 		RETURN									; return
 
 ;;============================================================================
@@ -252,6 +271,16 @@ initial_positions:
 		LOAD gs_tbullety, scratch
 		LOAD gs_major, gs_major_playing
 		LOAD gs_minor, gs_minor_begins
+		
+		LOAD scratch, zero						; loads zero to scratch
+		STORE scratch, alien_x					; aliens start at 0,0
+		STORE scratch, alien_y					; aliens start at 0,0
+		LOAD scratch, ff						; loads ff to scratch
+		STORE scratch, alien_1_hp				; sets full health to aliens
+		STORE scratch, alien_2_hp				; sets full health to aliens
+		STORE scratch, alien_3_hp				; sets full health to aliens
+		STORE scratch, alien_4_hp				; sets full health to aliens
+		STORE scratch, alien_5_hp				; sets full health to aliens
 		RETURN
 
 calc_playing:
@@ -260,9 +289,40 @@ calc_playing:
 		CALL NZ, load_tbullet_en				; if it was, enable bullet enable
 		COMPARE tbullet_en, zero				; check if bullet enable is enabled
 		CALL NZ, upd_tbullet					; if it is, update shot bullet position
-		;CALL upd_aliens
+		CALL upd_aliens
 		RETURN
 
+upd_aliens:
+		FETCH scratch, alien_x					; store alien x position to scratch
+		COMPARE scratch, 87					; compare and check if at end
+		CALL Z, upd_aliens_y					; if at end add one to y position
+		COMPARE scratch, 00
+		CALL Z, upd_aliens_y					; if at end add one to y position
+		FETCH scratch, alien_y
+		TEST scratch, 01
+		CALL NC, upd_aliens_x_left
+		CALL C, upd_aliens_x_right
+		FETCH scratch, alien_y
+		COMPARE scratch, be
+		CALL Z, goto_gameend					; end the game if aliens reach end
+		RETURN
+
+upd_aliens_x_right:
+		FETCH scratch, alien_x					; store alien x position to scratch
+		ADD scratch, one						; adds one to scratch
+		STORE scratch, alien_x					; store scratch back into alien x position
+		RETURN
+upd_aliens_x_left:
+		FETCH scratch, alien_x					; store alien x position to scratch
+		SUB scratch, one						; sub one to scratch
+		STORE scratch, alien_x					; store scratch back into alien x position
+		RETURN
+upd_aliens_y:
+		FETCH scratch, alien_y					; store alien y position to scratch
+		ADD scratch, 05						; adds one to scratch
+		STORE scratch, alien_y					; store scratch back into alien y position
+		RETURN
+		
 upd_tank:
 		LOAD scratch, zero						; update tank position
 		TEST btnsamp, buttons_lf
@@ -700,8 +760,757 @@ draw_playing:
 		LOAD xpos, shield4x	; draw shield 4 side 8
 		LOAD ypos, shieldy
 		CALL drawto
+		CALL draw_alien_1
 		RETURN
 
+draw_alien_1:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 01
+		JUMP NC, draw_alien_2
+		FETCH scratch, alien_x ;draw 1 alien
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_2:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 02
+		JUMP NC, draw_alien_3
+		FETCH scratch, alien_x ;draw 2 alien
+		ADD scratch, 10
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_3:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 04
+		JUMP NC, draw_alien_3
+		FETCH scratch, alien_x ;draw 3 alien
+		ADD scratch, 20
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_4:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 08
+		JUMP NC, draw_alien_5
+		FETCH scratch, alien_x ;draw 4 alien
+		ADD scratch, 30
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_5:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 10
+		JUMP NC, draw_alien_6
+		FETCH scratch, alien_x ;draw 5 alien
+		ADD scratch, 40
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_6:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 20
+		JUMP NC, draw_alien_7
+		FETCH scratch, alien_x ;draw 6 alien
+		ADD scratch, 50
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_7:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 40
+		JUMP NC, draw_alien_8
+		FETCH scratch, alien_x ;draw 7 alien
+		ADD scratch, 60
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_8:
+		FETCH scratch, alien_1_hp
+		TEST scratch, 80
+		JUMP NC, draw_alien_9
+		FETCH scratch, alien_x ;draw 8 alien
+		ADD scratch, 70
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_9:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 01
+		JUMP NC, draw_alien_10
+		FETCH scratch, alien_x ;draw 9 alien
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_10:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 02
+		JUMP NC, draw_alien_11
+		FETCH scratch, alien_x ;draw 10 alien
+		ADD scratch, 10
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_11:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 04
+		JUMP NC, draw_alien_12
+		FETCH scratch, alien_x ;draw 11 alien
+		ADD scratch, 20
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_12:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 08
+		JUMP NC, draw_alien_13
+		FETCH scratch, alien_x ;draw 12 alien
+		ADD scratch, 30
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_13:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 10
+		JUMP NC, draw_alien_14
+		FETCH scratch, alien_x ;draw 13 alien
+		ADD scratch, 40
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_14:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 20
+		JUMP NC, draw_alien_15
+		FETCH scratch, alien_x ;draw 14 alien
+		ADD scratch, 50
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_15:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 40
+		JUMP NC, draw_alien_16
+		FETCH scratch, alien_x ;draw 15 alien
+		ADD scratch, 60
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_16:
+		FETCH scratch, alien_2_hp
+		TEST scratch, 80
+		JUMP NC, draw_alien_17
+		FETCH scratch, alien_x ;draw 16 alien
+		ADD scratch, 70
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 08
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_17:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 01
+		JUMP NC, draw_alien_18
+		FETCH scratch, alien_x ;draw 17 alien
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_18:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 02
+		JUMP NC, draw_alien_19
+		FETCH scratch, alien_x ;draw 18 alien
+		ADD scratch, 10
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_19:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 04
+		JUMP NC, draw_alien_20
+		FETCH scratch, alien_x ;draw 19 alien
+		ADD scratch, 20
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_20:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 08
+		JUMP NC, draw_alien_21
+		FETCH scratch, alien_x ;draw 20 alien
+		ADD scratch, 30
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_21:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 10
+		JUMP NC, draw_alien_22
+		FETCH scratch, alien_x ;draw 21 alien
+		ADD scratch, 40
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_22:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 20
+		JUMP NC, draw_alien_23
+		FETCH scratch, alien_x ;draw 22 alien
+		ADD scratch, 50
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_23:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 40
+		JUMP NC, draw_alien_24
+		FETCH scratch, alien_x ;draw 23 alien
+		ADD scratch, 60
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_24:
+		FETCH scratch, alien_3_hp
+		TEST scratch, 80
+		JUMP NC, draw_alien_25
+		FETCH scratch, alien_x ;draw 24 alien
+		ADD scratch, 70
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 10
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_25:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 01
+		JUMP NC, draw_alien_26
+		FETCH scratch, alien_x ;draw 25 alien
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_26:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 02
+		JUMP NC, draw_alien_27
+		FETCH scratch, alien_x ;draw 26 alien
+		ADD scratch, 10
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_27:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 04
+		JUMP NC, draw_alien_28
+		FETCH scratch, alien_x ;draw 27 alien
+		ADD scratch, 20
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_28:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 08
+		JUMP NC, draw_alien_29
+		FETCH scratch, alien_x ;draw 28 alien
+		ADD scratch, 30
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_29:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 10
+		JUMP NC, draw_alien_30
+		FETCH scratch, alien_x ;draw 29 alien
+		ADD scratch, 40
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_30:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 20
+		JUMP NC, draw_alien_31
+		FETCH scratch, alien_x ;draw 30 alien
+		ADD scratch, 50
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_31:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 40
+		JUMP NC, draw_alien_32
+		FETCH scratch, alien_x ;draw 31 alien
+		ADD scratch, 60
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_32:
+		FETCH scratch, alien_4_hp
+		TEST scratch, 80
+		JUMP NC, draw_alien_33
+		FETCH scratch, alien_x ;draw 32 alien
+		ADD scratch, 70
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 18
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_33:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 01
+		JUMP NC, draw_alien_34
+		FETCH scratch, alien_x ;draw 33 alien
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_34:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 02
+		JUMP NC, draw_alien_35
+		FETCH scratch, alien_x ;draw 34 alien
+		ADD scratch, 10
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_35:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 04
+		JUMP NC, draw_alien_36
+		FETCH scratch, alien_x ;draw 35 alien
+		ADD scratch, 20
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_36:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 08
+		JUMP NC, draw_alien_37
+		FETCH scratch, alien_x ;draw 36 alien
+		ADD scratch, 30
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_37:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 10
+		JUMP NC, draw_alien_38
+		FETCH scratch, alien_x ;draw 37 alien
+		ADD scratch, 40
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_38:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 20
+		JUMP NC, draw_alien_39
+		FETCH scratch, alien_x ;draw 38 alien
+		ADD scratch, 50
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_39:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 40
+		JUMP NC, draw_alien_39
+		FETCH scratch, alien_x ;draw 39 alien
+		ADD scratch, 60
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+draw_alien_40:
+		FETCH scratch, alien_5_hp
+		TEST scratch, 80
+		FETCH scratch, alien_x ;draw 40 alien
+		ADD scratch, 70
+		LOAD xpos, scratch
+		FETCH scratch, alien_y
+		ADD scratch, 20
+		LOAD ypos, scratch
+		CALL moveto
+		ADD xpos, alien_x_dim
+		CALL drawto
+		ADD ypos, alien_y_dim
+		CALL drawto
+		SUB xpos, alien_x_dim
+		CALL drawto
+		SUB ypos, alien_y_dim
+		CALL drawto
+		RETURN
+		
 draw_gameend:
 		LOAD xpos, 48			; draw letter d
 		LOAD ypos, 50
