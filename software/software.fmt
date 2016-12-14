@@ -4,13 +4,15 @@
                          ;; No guarantee this is bug-free but it is a playable example.
                          ;;============================================================================
                          ;;============================================================================
-                         ;; Editor: Thi Le
-                         ;; Current Version: 1.4
+                         ;; Editor: Jacky, Thi
+                         ;; Current Version: 2.0
                          ;; Change Log: 1.0 - initial file provided
                          ;;      1.1 - replaced padl with tank and cleaned up code
                          ;;      1.2 - added in bullet, bullet shooting, and bullet resetting
                          ;;      1.3 - added in shield drawings
                          ;;      1.4 - completion of shield hit detection and bullet reset
+                         ;;      1.5 - added in shield health, with full/dead shield models
+                         ;;      2.0 - merged with alien code
                          ;;============================================================================
                          ;;============================================================================
                          ;; Ports and related constants.
@@ -68,18 +70,22 @@
                          CONSTANT gs_tank_xdim, 10          ; it's this plus 1
                          CONSTANT gs_tank_ydim, 08          ; it's this plus 1
                          CONSTANT gs_tank_speed, 02         ; pixels per frame
-                         NAMEREG s6, shieldshp              ; health register counter for 4 shields: 00 00 00 00
-                         CONSTANT shield1hit, 40            ; add to shieldshp when shield 1 is hit: 01 00 00 00
-                         CONSTANT shield2hit, 10            ; add to shieldshp when shield 2 is hit: 00 01 00 00
-                         CONSTANT shield3hit, 04            ; add to shieldshp when shield 3 is hit: 00 00 01 00
-                         CONSTANT shield4hit, 01            ; add to shieldshp when shield 4 is hit: 00 00 00 01
+                         NAMEREG s6, shieldshp              ; full health register counter for 4 shields: 00 00 00 00
+                         CONSTANT shield1hit, 40            ; add 01 from shieldshp when shield 1 is hit: 01 00 00 00
+                         CONSTANT shield2hit, 10            ; add 01 from shieldshp when shield 2 is hit: 00 01 00 00
+                         CONSTANT shield3hit, 04            ; add 01 from shieldshp when shield 3 is hit: 00 00 01 00
+                         CONSTANT shield4hit, 01            ; add 01 from shieldshp when shield 4 is hit: 00 00 00 01
+                         CONSTANT shield1dead_test, 3F      ; used to test shield1 hp with shieldshp reg: 00 11 11 11
+                         CONSTANT shield2dead_test, CF      ; used to test shield2 hp with shieldshp reg: 11 00 11 11
+                         CONSTANT shield3dead_test, F3      ; used to test shield3 hp with shieldshp reg: 11 11 00 11
+                         CONSTANT shield4dead_test, FC      ; used to test shield4 hp with shieldshp reg: 11 11 11 00
                          CONSTANT shieldxdim, 18            ; shield x dimension is 24 pixels
                          CONSTANT shieldydim, 14            ; shield y dimension is 20 pixels
                          CONSTANT shield1x, 10              ; shield 1 starts at x = 16
                          CONSTANT shield2x, 52              ; shield 2 starts at x = 82
                          CONSTANT shield3x, 95              ; shield 3 starts at x = 149
                          CONSTANT shield4x, D7              ; shield 4 starts at x = 215
-                         CONSTANT shieldy, E0               ; shield starts at y = 224
+                         CONSTANT shieldy, D0               ; shield starts at y = 208
                          CONSTANT alien_x, 00               ; scratchpad memory location
                          CONSTANT alien_y, 01
                          CONSTANT alien_1_hp, 02
@@ -170,6 +176,7 @@
                          LOAD gs_tankx, zero                ; doesn't really matter
                          LOAD gs_tbulletdy, zero            ; doesn't really matter
                          LOAD tbullet_en, zero              ; start with top button not pressed
+                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -235,6 +242,7 @@
                          LOAD gs_tbullety, scratch
                          LOAD gs_major, gs_major_playing
                          LOAD gs_minor, gs_minor_begins
+                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -251,21 +259,180 @@
                          CALL NZ, load_tbullet_en           ; if it was, enable bullet enable
                          COMPARE tbullet_en, zero           ; check if bullet enable is enabled
                          CALL NZ, upd_tbullet               ; if it is, update shot bullet position
-                         CALL upd_aliens
+                         COMPARE shieldshp, FF              ; check if shields hp is depleted
+                         CALL NZ, upd_shields               ; if it is, stop updating shields
+                         CALL upd_aliens                    ; update aliens
+                         ADD gs_minor, one
                          RETURN 
              upd_aliens: 
-                         FETCH scratch, alien_x             ; store alien x position to scratch
-                         COMPARE scratch, 87                ; compare and check if at end
-                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         FETCH scratch, alien_x
                          COMPARE scratch, 00
                          CALL Z, upd_aliens_y               ; if at end add one to y position
+                         FETCH scratch, alien_1_hp          ;left shift aliens if left side is dystroyed
+                         TEST scratch, 01
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, 01
+                         CALL Z, alien_hp_shift
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, FE
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, FE
+                         JUMP Z, upd_aliens_y_7
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, FC
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, FC
+                         JUMP Z, upd_aliens_y_6
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, F8
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, F8
+                         JUMP Z, upd_aliens_y_5
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, F0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, F0
+                         JUMP Z, upd_aliens_y_4
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, E0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, E0
+                         JUMP Z, upd_aliens_y_3
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, C0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, C0
+                         JUMP Z, upd_aliens_y_2
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 80
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, 80
+                         JUMP Z, upd_aliens_y_1
+                         JUMP upd_aliens_y_0
+        upd_aliens_cont: 
                          FETCH scratch, alien_y
                          TEST scratch, 01
                          CALL NC, upd_aliens_x_left
                          CALL C, upd_aliens_x_right
                          FETCH scratch, alien_y
                          COMPARE scratch, BE
-                         CALL Z, goto_gameend               ; end the game if aliens reach end
+                         JUMP NC, goto_gameend
+                         FETCH scratch, alien_1_hp
+                         COMPARE scratch, 00
+                         FETCH scratch, alien_2_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_3_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_4_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_5_hp
+                         COMPARECY scratch, 00
+                         JUMP Z, goto_gameend               ; end the game if aliens reach end
+                         RETURN 
+         upd_aliens_y_0: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 87                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_1: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 97                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_2: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, A7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_3: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, B7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_4: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, C7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_5: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, D7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_6: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, E7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_7: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, F7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         alien_hp_shift: 
+                         FETCH scratch, alien_1_hp
+                         SR0 scratch
+                         STORE scratch, alien_1_hp
+                         FETCH scratch, alien_2_hp
+                         SR0 scratch
+                         STORE scratch, alien_2_hp
+                         FETCH scratch, alien_3_hp
+                         SR0 scratch
+                         STORE scratch, alien_3_hp
+                         FETCH scratch, alien_4_hp
+                         SR0 scratch
+                         STORE scratch, alien_4_hp
+                         FETCH scratch, alien_5_hp
+                         SR0 scratch
+                         STORE scratch, alien_5_hp
                          RETURN 
      upd_aliens_x_right: 
                          FETCH scratch, alien_x             ; store alien x position to scratch
@@ -321,8 +488,29 @@
                          RETURN C                           ; needed for some reason I do not know... yet
                          SUB gs_tbullety, one
                          JUMP Z, reset_tbullet
+                         COMPARE shieldshp, FF
+                         JUMP Z, restart_upd_bullet_loop
                          COMPARE gs_tbullety, shieldy
                          JUMP Z, check_shield
+                         FETCH scratch, alien_y
+                         ADD scratch, 20
+                         COMPARE gs_tbullety, scratch
+                         JUMP Z, check_alien_5_hp
+                         FETCH scratch, alien_y
+                         ADD scratch, 18
+                         COMPARE gs_tbullety, scratch
+                         JUMP Z, check_alien_4_hp
+                         FETCH scratch, alien_y
+                         ADD scratch, 10
+                         COMPARE gs_tbullety, scratch
+                         JUMP Z, check_alien_3_hp
+                         FETCH scratch, alien_y
+                         ADD scratch, 08
+                         COMPARE gs_tbullety, scratch
+                         JUMP Z, check_alien_2_hp
+                         FETCH scratch, alien_y
+                         COMPARE gs_tbullety, scratch
+                         JUMP Z, check_alien_1_hp
 restart_upd_bullet_loop: 
                          JUMP upd_tbullet_loop
           reset_tbullet: ; reload bullet position when it hits something
@@ -334,6 +522,571 @@ restart_upd_bullet_loop:
                          LOAD gs_tbullety, scratch
                          LOAD tbullet_en, zero
                          RETURN 
+       check_alien_5_hp: 
+                         FETCH scratch, alien_x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_1
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_2
+                         FETCH scratch, alien_x
+                         ADD scratch, 20
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_3
+                         FETCH scratch, alien_x
+                         ADD scratch, 30
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_4
+                         FETCH scratch, alien_x
+                         ADD scratch, 40
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_5
+                         FETCH scratch, alien_x
+                         ADD scratch, 50
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_6
+                         FETCH scratch, alien_x
+                         ADD scratch, 60
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_7
+                         FETCH scratch, alien_x
+                         ADD scratch, 70
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_5_hp_8
+                         JUMP restart_upd_bullet_loop
+     check_alien_5_hp_1: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 01
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 01
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_2: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 02
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 02
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_3: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 04
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 04
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_4: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 08
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 08
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_5: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 10
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 10
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_6: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 20
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 20
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_7: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 40
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 40
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+     check_alien_5_hp_8: 
+                         FETCH scratch, alien_5_hp
+                         TEST scratch, 80
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 80
+                         STORE scratch, alien_5_hp
+                         JUMP reset_tbullet
+       check_alien_4_hp: 
+                         FETCH scratch, alien_x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_1
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_2
+                         FETCH scratch, alien_x
+                         ADD scratch, 20
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_3
+                         FETCH scratch, alien_x
+                         ADD scratch, 30
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_4
+                         FETCH scratch, alien_x
+                         ADD scratch, 40
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_5
+                         FETCH scratch, alien_x
+                         ADD scratch, 50
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_6
+                         FETCH scratch, alien_x
+                         ADD scratch, 60
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_7
+                         FETCH scratch, alien_x
+                         ADD scratch, 70
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_4_hp_8
+                         JUMP restart_upd_bullet_loop
+     check_alien_4_hp_1: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 01
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 01
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_2: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 02
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 02
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_3: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 04
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 04
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_4: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 08
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 08
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_5: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 10
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 10
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_6: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 20
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 20
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_7: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 40
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 40
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+     check_alien_4_hp_8: 
+                         FETCH scratch, alien_4_hp
+                         TEST scratch, 80
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 80
+                         STORE scratch, alien_4_hp
+                         JUMP reset_tbullet
+       check_alien_3_hp: 
+                         FETCH scratch, alien_x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_1
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_2
+                         FETCH scratch, alien_x
+                         ADD scratch, 20
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_3
+                         FETCH scratch, alien_x
+                         ADD scratch, 30
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_4
+                         FETCH scratch, alien_x
+                         ADD scratch, 40
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_5
+                         FETCH scratch, alien_x
+                         ADD scratch, 50
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_6
+                         FETCH scratch, alien_x
+                         ADD scratch, 60
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_7
+                         FETCH scratch, alien_x
+                         ADD scratch, 70
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_3_hp_8
+                         JUMP restart_upd_bullet_loop
+     check_alien_3_hp_1: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 01
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 01
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_2: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 02
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 02
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_3: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 04
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 04
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_4: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 08
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 08
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_5: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 10
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 10
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_6: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 20
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 20
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_7: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 40
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 40
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+     check_alien_3_hp_8: 
+                         FETCH scratch, alien_3_hp
+                         TEST scratch, 80
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 80
+                         STORE scratch, alien_3_hp
+                         JUMP reset_tbullet
+       check_alien_2_hp: 
+                         FETCH scratch, alien_x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_1
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_2
+                         FETCH scratch, alien_x
+                         ADD scratch, 20
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_3
+                         FETCH scratch, alien_x
+                         ADD scratch, 30
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_4
+                         FETCH scratch, alien_x
+                         ADD scratch, 40
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_5
+                         FETCH scratch, alien_x
+                         ADD scratch, 50
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_6
+                         FETCH scratch, alien_x
+                         ADD scratch, 60
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_7
+                         FETCH scratch, alien_x
+                         ADD scratch, 70
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_2_hp_8
+                         JUMP restart_upd_bullet_loop
+     check_alien_2_hp_1: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 01
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 01
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_2: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 02
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 02
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_3: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 04
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 04
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_4: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 08
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 08
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_5: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 10
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 10
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_6: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 20
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 20
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_7: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 40
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 40
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+     check_alien_2_hp_8: 
+                         FETCH scratch, alien_2_hp
+                         TEST scratch, 80
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 80
+                         STORE scratch, alien_2_hp
+                         JUMP reset_tbullet
+       check_alien_1_hp: 
+                         FETCH scratch, alien_x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_1
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_2
+                         FETCH scratch, alien_x
+                         ADD scratch, 20
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_3
+                         FETCH scratch, alien_x
+                         ADD scratch, 30
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_4
+                         FETCH scratch, alien_x
+                         ADD scratch, 40
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_5
+                         FETCH scratch, alien_x
+                         ADD scratch, 50
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_6
+                         FETCH scratch, alien_x
+                         ADD scratch, 60
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_7
+                         FETCH scratch, alien_x
+                         ADD scratch, 70
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         ADD scratch, alien_x_dim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_alien_1_hp_8
+                         JUMP restart_upd_bullet_loop
+     check_alien_1_hp_1: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 01
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 01
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_2: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 02
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 02
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_3: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 04
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 04
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_4: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 08
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 08
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_5: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 10
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 10
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_6: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 20
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 20
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_7: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 40
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 40
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
+     check_alien_1_hp_8: 
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 80
+                         JUMP NC, restart_upd_bullet_loop
+                         XOR scratch, 80
+                         STORE scratch, alien_1_hp
+                         JUMP reset_tbullet
            check_shield: ; check which shield region the bullet is in
                          LOAD scratch, shield1x
                          ADD scratch, shieldxdim
@@ -352,41 +1105,138 @@ restart_upd_bullet_loop:
                          COMPARE gs_tbulletx, scratch
                          JUMP C, check_shield4
                          JUMP restart_upd_bullet_loop
-          check_shield1: ; check if the bullet hit shield 1
-                         LOAD scratch, shield1x
+          check_shield1: ; checks if the bullet hit shield 1
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 1 HP is depleted
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield1x             ; checks bulletx with left game edge
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield1x
+                         LOAD scratch, shield1x             ; checks bulletx with shield 1
                          ADD scratch, shieldxdim
                          COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+                         JUMP NC, shield1_hit               ; if hit, update shield 1 and bullet
+          check_shield2: ; checks if the bullet hit shield 2
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 2 HP is depleted
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield2x             ; checks bulletx with gap between shield 1 and shield 2
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield2x             ; checks bulletx with shield 2
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield2_hit               ; if hit, update shield 2 and bullet
+          check_shield3: ; checks if the bullet hit shield 3
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 3 HP is depleted
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield3x             ; checks bulletx with gap between shield 2 and shield 3
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield3x             ; checks bulletx with shield 3
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield3_hit               ; if hit, update shield 3 and bullet
+          check_shield4: ; checks if the bullet hit shield 4
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 4 HP is depleted
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield4x             ; checks bulletx with gap between shield 3 and shield 4
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield4x             ; checks bulletx with shield 4
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield4_hit               ; if hit, update shield 4 and bullet
+            shield1_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 1 HP is depleted
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield1hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield2_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 2 HP is depleted
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield2hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield3_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 3 HP is depleted
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield3hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield4_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 4 HP is depleted
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield4hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            upd_shields: 
+                         LOAD scratch, shieldshp
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield1_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield2_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield3_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield4_full
                          RETURN 
-          check_shield2: ; check if the bullet hit shield 2
-                         LOAD scratch, shield2x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield2x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
-                         RETURN 
-          check_shield3: ; check if the bullet hit shield 3
-                         LOAD scratch, shield3x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield3x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
-                         RETURN 
-          check_shield4: ; check if the bullet hit shield 4
-                         LOAD scratch, shield4x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield4x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+      draw_shield1_full: 
+                         LOAD xpos, shield1x                ; draw shield 1
+                         LOAD ypos, shieldy
+                         JUMP draw_shield
+      draw_shield2_full: 
+                         LOAD xpos, shield2x                ; draw shield 2
+                         LOAD ypos, shieldy
+                         JUMP draw_shield
+      draw_shield3_full: 
+                         LOAD xpos, shield3x                ; draw shield 3
+                         LOAD ypos, shieldy
+                         JUMP draw_shield
+      draw_shield4_full: 
+                         LOAD xpos, shield4x                ; draw shield 4
+                         LOAD ypos, shieldy
+                         JUMP draw_shield
+            draw_shield: 
+                         CALL moveto
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         ADD ypos, shieldydim
+                         CALL drawto
+                         SUB xpos, 09
+                         CALL drawto
+                         SUB ypos, 06
+                         CALL drawto
+                         SUB xpos, 06
+                         CALL drawto
+                         ADD ypos, 06
+                         CALL drawto
+                         SUB xpos, 09
+                         CALL drawto
                          RETURN 
            calc_gameend: 
                          COMPARE gs_minor, gs_minor_onesec
@@ -428,94 +1278,383 @@ restart_upd_bullet_loop:
                          OUTPUT gs_minor, leds_lo           ; debug display on leds
                          RETURN                             ; return
            draw_attrone: 
-                         LOAD xpos, 28                      ; draw letter b
-                         LOAD ypos, 50
-                         CALL moveto
-                         LOAD xpos, 28
-                         LOAD ypos, 90
-                         CALL drawto
-                         LOAD xpos, 48
-                         LOAD ypos, 90
-                         CALL drawto
-                         LOAD xpos, 48
-                         LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, 28
-                         LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, 58                      ; draw letter o
+                         LOAD xpos, 3A                      ;draw letter S
                          LOAD ypos, 70
                          CALL moveto
-                         LOAD xpos, 58
+                         LOAD xpos, 4E                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 3E                      ; 3
+                         CALL drawto
+                         LOAD ypos, 7E
+                         CALL drawto
+                         LOAD xpos, 4E                      ; 5
+                         CALL drawto
                          LOAD ypos, 90
                          CALL drawto
-                         LOAD xpos, 78
-                         LOAD ypos, 90
+                         LOAD xpos, 3A                      ; 7
                          CALL drawto
-                         LOAD xpos, 78
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 4A                      ; 9
+                         CALL drawto
+                         LOAD ypos, 82
+                         CALL drawto
+                         LOAD xpos, 3A                      ; 11
+                         CALL drawto
                          LOAD ypos, 70
                          CALL drawto
-                         LOAD xpos, 58
+                         LOAD xpos, 58                      ; draw letter p
                          LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, 88                      ; draw letter n
-                         LOAD ypos, 90
                          CALL moveto
-                         LOAD xpos, 88
-                         LOAD ypos, 70
+                         LOAD xpos, 6C                      ; 1
                          CALL drawto
-                         LOAD xpos, A8
-                         LOAD ypos, 70
+                         LOAD ypos, 80
                          CALL drawto
-                         LOAD xpos, A8
+                         LOAD xpos, 5C                      ; 3
+                         CALL drawto
                          LOAD ypos, 90
                          CALL drawto
-                         LOAD xpos, B8                      ; draw letter g
-                         LOAD ypos, B0
+                         LOAD xpos, 58                      ; 5
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 5C                      ; drawing inside of p
+                         LOAD ypos, 74
                          CALL moveto
-                         LOAD xpos, D8
-                         LOAD ypos, B0
+                         LOAD xpos, 69                      ; 7
                          CALL drawto
-                         LOAD xpos, D8
+                         LOAD ypos, 7C
+                         CALL drawto
+                         LOAD xpos, 5C                      ; 9
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 7D                      ; draw letter A
                          LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 82                      ; 1
                          CALL drawto
-                         LOAD xpos, B8
-                         LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, B8
+                         LOAD xpos, 8A                      ; 2
                          LOAD ypos, 90
                          CALL drawto
-                         LOAD xpos, D8
+                         LOAD xpos, 86                      ; 3
+                         CALL drawto
+                         LOAD xpos, 84                      ; 4
+                         LOAD ypos, 83
+                         CALL drawto
+                         LOAD xpos, 7C                      ; 5
+                         CALL drawto
+                         LOAD xpos, 7A                      ; 6
                          LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 76                      ; 7
+                         CALL drawto
+                         LOAD xpos, 7D                      ; 8
+                         LOAD ypos, 70
+                         CALL drawto                        ; drawing inside of A
+                         LOAD ypos, 7D
+                         CALL moveto
+                         LOAD xpos, 7F                      ; 9
+                         LOAD ypos, 73
+                         CALL drawto
+                         LOAD xpos, 82                      ; 10
+                         LOAD ypos, 7D
+                         CALL drawto
+                         LOAD xpos, 7D                      ; 11
+                         CALL drawto
+                         LOAD xpos, 94                      ; drawing C
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, A8                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 98                      ; 3
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, A8                      ; 5
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 94                      ; 7
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, B2                      ; draw E
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, C6                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, B6                      ; 3
+                         CALL drawto
+                         LOAD ypos, 7E
+                         CALL drawto
+                         LOAD xpos, C4                      ; 5
+                         CALL drawto
+                         LOAD ypos, 82
+                         CALL drawto
+                         LOAD xpos, B6                      ; 7
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, C6                      ; 9
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, B2                      ; 11
+                         CALL drawto
+                         LOAD ypos, 70
                          CALL drawto
                          RETURN 
            draw_attrtwo: 
-                         LOAD xpos, 78                      ; draw letter e
-                         LOAD ypos, 90
-                         CALL moveto
-                         LOAD xpos, 58
-                         LOAD ypos, 90
-                         CALL drawto
-                         LOAD xpos, 58
-                         LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, 78
-                         LOAD ypos, 70
-                         CALL drawto
-                         LOAD xpos, 58
-                         LOAD ypos, 90
-                         CALL drawto
-                         LOAD xpos, A8                      ; draw letter c
+                         LOAD xpos, 0D                      ; draw letter I
                          LOAD ypos, 70
                          CALL moveto
-                         LOAD xpos, 88
+                         LOAD xpos, 21                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 19                      ; 3
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 21                      ; 5
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 0D                      ; 7
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 15                      ; 9
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 0D                      ; 11
+                         CALL drawto
                          LOAD ypos, 70
                          CALL drawto
-                         LOAD xpos, 88
+                         LOAD xpos, 2B                      ; draw letter N
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 30                      ; 1
+                         CALL drawto
+                         LOAD xpos, 3B                      ; 2
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 3F                      ; 4
+                         CALL drawto
                          LOAD ypos, 90
                          CALL drawto
-                         LOAD xpos, A8
+                         LOAD xpos, 3A                      ; 6
+                         CALL drawto
+                         LOAD xpos, 2F                      ; 7
+                         LOAD ypos, 74
+                         CALL drawto
                          LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 2B                      ; 9
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 49                      ; draw letter V
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 4D                      ; 1
+                         CALL drawto
+                         LOAD xpos, 53                      ; 2
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 59                      ; 3
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 5D                      ; 4
+                         CALL drawto
+                         LOAD xpos, 55                      ; 5
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 51                      ; 6
+                         CALL drawto
+                         LOAD xpos, 49                      ; 7
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 6E                      ; draw letter A
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 73                      ; 1
+                         CALL drawto
+                         LOAD xpos, 7B                      ; 2
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 77                      ; 3
+                         CALL drawto
+                         LOAD xpos, 74                      ; 4
+                         LOAD ypos, 83
+                         CALL drawto
+                         LOAD xpos, 6D                      ; 5
+                         CALL drawto
+                         LOAD xpos, 6B                      ; 6
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 67                      ; 7
+                         CALL drawto
+                         LOAD xpos, 6E                      ; 8
+                         LOAD ypos, 70
+                         CALL drawto                        ; inside of A
+                         LOAD ypos, 7D
+                         CALL moveto
+                         LOAD xpos, 71                      ; 9
+                         LOAD ypos, 73
+                         CALL drawto
+                         LOAD xpos, 73                      ; 10
+                         LOAD ypos, 7D
+                         CALL drawto
+                         LOAD xpos, 6E                      ; 11
+                         LOAD ypos, 7D
+                         CALL drawto
+                         LOAD xpos, 85                      ; draw letter D
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, 8D                      ; 1
+                         CALL drawto
+                         LOAD xpos, 91                      ; 2
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, 99                      ; 4
+                         LOAD ypos, 7C
+                         CALL drawto
+                         LOAD ypos, 7F
+                         CALL drawto
+                         LOAD ypos, 82
+                         CALL drawto
+                         LOAD xpos, 91                      ; 8
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 8D                      ; 9
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 85                      ; 10
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, 85                      ; 11
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, 89                      ; inside of letter D
+                         LOAD ypos, 74
+                         CALL moveto
+                         LOAD xpos, 8D                      ; 8
+                         CALL drawto
+                         LOAD xpos, 95                      ; 9
+                         LOAD ypos, 7C
+                         CALL drawto
+                         LOAD xpos, 95                      ; 10
+                         LOAD ypos, 80
+                         CALL drawto
+                         LOAD xpos, 95                      ; 11
+                         LOAD ypos, 84
+                         CALL drawto
+                         LOAD xpos, 8D                      ; 12
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, 89                      ; 13
+                         CALL drawto
+                         LOAD xpos, 89                      ; 14
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, A2                      ; draw letter E
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, B6                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, A6                      ; 3
+                         CALL drawto
+                         LOAD ypos, 7E
+                         CALL drawto
+                         LOAD xpos, B4                      ; 5
+                         CALL drawto
+                         LOAD ypos, 82
+                         CALL drawto
+                         LOAD xpos, A6                      ; 7
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, B6                      ; 9
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, A2                      ; 11
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, C0                      ; draw R
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, D4                      ; 1
+                         CALL drawto
+                         LOAD ypos, 80
+                         CALL drawto
+                         LOAD xpos, CA                      ; 3
+                         CALL drawto
+                         LOAD xpos, D4                      ; 4
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, D0                      ; 5
+                         CALL drawto
+                         LOAD xpos, C4                      ; 6
+                         LOAD ypos, 80
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, C0                      ; 8
+                         CALL drawto
+                         LOAD ypos, 70
+                         CALL drawto
+                         LOAD xpos, C4                      ; Inside of R
+                         LOAD ypos, 74
+                         CALL moveto
+                         LOAD xpos, D0                      ; 10
+                         CALL drawto
+                         LOAD ypos, 7C
+                         CALL drawto
+                         LOAD xpos, C4                      ; 12
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, DE                      ; draw S
+                         LOAD ypos, 70
+                         CALL moveto
+                         LOAD xpos, F2                      ; 1
+                         CALL drawto
+                         LOAD ypos, 74
+                         CALL drawto
+                         LOAD xpos, E2                      ; 3
+                         CALL drawto
+                         LOAD ypos, 7E
+                         CALL drawto
+                         LOAD xpos, F2                      ; 5
+                         CALL drawto
+                         LOAD ypos, 90
+                         CALL drawto
+                         LOAD xpos, DE                      ; 7
+                         CALL drawto
+                         LOAD ypos, 8C
+                         CALL drawto
+                         LOAD xpos, EE                      ; 9
+                         CALL drawto
+                         LOAD ypos, 82
+                         CALL drawto
+                         LOAD xpos, DE                      ; 11
+                         CALL drawto
+                         LOAD ypos, 70
                          CALL drawto
                          RETURN 
            draw_playing: 
@@ -545,164 +1684,6 @@ restart_upd_bullet_loop:
                          LOAD xpos, gs_tankx
                          LOAD ypos, gs_tanky
                          CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield1x                ; draw shield 1 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield2x                ; draw shield 2 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield3x                ; draw shield 3 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield4x                ; draw shield 4 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         CALL draw_alien_1
-                         RETURN 
            draw_alien_1: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 01
@@ -711,15 +1692,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_2: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 02
@@ -729,33 +1702,17 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_3: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 04
-                         JUMP NC, draw_alien_3
+                         JUMP NC, draw_alien_4
                          FETCH scratch, alien_x             ;draw 3 alien
                          ADD scratch, 20
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_4: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 08
@@ -765,15 +1722,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_5: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 10
@@ -783,15 +1732,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_6: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 20
@@ -801,15 +1742,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_7: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 40
@@ -819,15 +1752,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_8: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 80
@@ -837,15 +1762,7 @@ restart_upd_bullet_loop:
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
            draw_alien_9: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 01
@@ -855,15 +1772,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_10: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 02
@@ -874,15 +1783,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_11: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 04
@@ -893,15 +1794,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_12: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 08
@@ -912,15 +1805,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_13: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 10
@@ -931,15 +1816,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_14: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 20
@@ -950,15 +1827,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_15: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 40
@@ -969,15 +1838,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_16: 
                          FETCH scratch, alien_2_hp
                          TEST scratch, 80
@@ -988,15 +1849,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 08
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_17: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 01
@@ -1006,15 +1859,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_18: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 02
@@ -1025,15 +1870,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_19: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 04
@@ -1044,15 +1881,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_20: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 08
@@ -1063,15 +1892,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_21: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 10
@@ -1082,15 +1903,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_22: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 20
@@ -1101,15 +1914,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_23: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 40
@@ -1120,15 +1925,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_24: 
                          FETCH scratch, alien_3_hp
                          TEST scratch, 80
@@ -1139,15 +1936,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 10
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_25: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 01
@@ -1157,15 +1946,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_26: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 02
@@ -1176,15 +1957,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_27: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 04
@@ -1195,15 +1968,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_28: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 08
@@ -1214,15 +1979,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_29: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 10
@@ -1233,15 +1990,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_30: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 20
@@ -1252,15 +2001,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_31: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 40
@@ -1271,15 +2012,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_32: 
                          FETCH scratch, alien_4_hp
                          TEST scratch, 80
@@ -1290,15 +2023,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 18
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_33: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 01
@@ -1308,15 +2033,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_34: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 02
@@ -1327,15 +2044,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_35: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 04
@@ -1346,15 +2055,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_36: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 08
@@ -1365,15 +2066,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_37: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 10
@@ -1384,15 +2077,7 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_38: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 20
@@ -1403,43 +2088,31 @@ restart_upd_bullet_loop:
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_39: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 40
-                         JUMP NC, draw_alien_39
+                         JUMP NC, draw_alien_40
                          FETCH scratch, alien_x             ;draw 39 alien
                          ADD scratch, 60
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
-                         CALL moveto
-                         ADD xpos, alien_x_dim
-                         CALL drawto
-                         ADD ypos, alien_y_dim
-                         CALL drawto
-                         SUB xpos, alien_x_dim
-                         CALL drawto
-                         SUB ypos, alien_y_dim
-                         CALL drawto
+                         CALL draw_alien
           draw_alien_40: 
                          FETCH scratch, alien_5_hp
                          TEST scratch, 80
+                         RETURN NC
                          FETCH scratch, alien_x             ;draw 40 alien
                          ADD scratch, 70
                          LOAD xpos, scratch
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          LOAD ypos, scratch
+                         CALL draw_alien
+                         RETURN 
+             draw_alien: 
                          CALL moveto
                          ADD xpos, alien_x_dim
                          CALL drawto
