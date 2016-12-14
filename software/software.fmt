@@ -261,7 +261,8 @@
                          CALL NZ, upd_tbullet               ; if it is, update shot bullet position
                          COMPARE shieldshp, FF              ; check if shields hp is depleted
                          CALL NZ, upd_shields               ; if it is, stop updating shields
-                         CALL upd_aliens                    ; update aliens
+                         TEST gs_minor, 01
+                         CALL C, upd_aliens                 ; update aliens
                          ADD gs_minor, one
                          RETURN 
              upd_aliens: 
@@ -433,6 +434,9 @@
                          FETCH scratch, alien_5_hp
                          SR0 scratch
                          STORE scratch, alien_5_hp
+                         FETCH scratch, alien_x
+                         ADD scratch, 10
+                         STORE scratch, alien_x
                          RETURN 
      upd_aliens_x_right: 
                          FETCH scratch, alien_x             ; store alien x position to scratch
@@ -488,10 +492,6 @@
                          RETURN C                           ; needed for some reason I do not know... yet
                          SUB gs_tbullety, one
                          JUMP Z, reset_tbullet
-                         COMPARE shieldshp, FF
-                         JUMP Z, restart_upd_bullet_loop
-                         COMPARE gs_tbullety, shieldy
-                         JUMP Z, check_shield
                          FETCH scratch, alien_y
                          ADD scratch, 20
                          COMPARE gs_tbullety, scratch
@@ -511,6 +511,10 @@
                          FETCH scratch, alien_y
                          COMPARE gs_tbullety, scratch
                          JUMP Z, check_alien_1_hp
+                         COMPARE shieldshp, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         COMPARE gs_tbullety, shieldy
+                         JUMP Z, check_shield
 restart_upd_bullet_loop: 
                          JUMP upd_tbullet_loop
           reset_tbullet: ; reload bullet position when it hits something
