@@ -4,13 +4,15 @@
                          ;; No guarantee this is bug-free but it is a playable example.
                          ;;============================================================================
                          ;;============================================================================
-                         ;; Editor: Thi Le
-                         ;; Current Version: 1.4
+                         ;; Editor: Jacky, Thi
+                         ;; Current Version: 2.0
                          ;; Change Log: 1.0 - initial file provided
                          ;;      1.1 - replaced padl with tank and cleaned up code
                          ;;      1.2 - added in bullet, bullet shooting, and bullet resetting
                          ;;      1.3 - added in shield drawings
                          ;;      1.4 - completion of shield hit detection and bullet reset
+                         ;;      1.5 - added in shield health, with full/dead shield models
+                         ;;      2.0 - merged with alien code
                          ;;============================================================================
                          ;;============================================================================
                          ;; Ports and related constants.
@@ -68,18 +70,22 @@
                          CONSTANT gs_tank_xdim, 10          ; it's this plus 1
                          CONSTANT gs_tank_ydim, 08          ; it's this plus 1
                          CONSTANT gs_tank_speed, 02         ; pixels per frame
-                         NAMEREG s6, shieldshp              ; health register counter for 4 shields: 00 00 00 00
-                         CONSTANT shield1hit, 40            ; add to shieldshp when shield 1 is hit: 01 00 00 00
-                         CONSTANT shield2hit, 10            ; add to shieldshp when shield 2 is hit: 00 01 00 00
-                         CONSTANT shield3hit, 04            ; add to shieldshp when shield 3 is hit: 00 00 01 00
-                         CONSTANT shield4hit, 01            ; add to shieldshp when shield 4 is hit: 00 00 00 01
+                         NAMEREG s6, shieldshp              ; full health register counter for 4 shields: 00 00 00 00
+                         CONSTANT shield1hit, 40            ; add 01 from shieldshp when shield 1 is hit: 01 00 00 00
+                         CONSTANT shield2hit, 10            ; add 01 from shieldshp when shield 2 is hit: 00 01 00 00
+                         CONSTANT shield3hit, 04            ; add 01 from shieldshp when shield 3 is hit: 00 00 01 00
+                         CONSTANT shield4hit, 01            ; add 01 from shieldshp when shield 4 is hit: 00 00 00 01
+                         CONSTANT shield1dead_test, 3F      ; used to test shield1 hp with shieldshp reg: 00 11 11 11
+                         CONSTANT shield2dead_test, CF      ; used to test shield2 hp with shieldshp reg: 11 00 11 11
+                         CONSTANT shield3dead_test, F3      ; used to test shield3 hp with shieldshp reg: 11 11 00 11
+                         CONSTANT shield4dead_test, FC      ; used to test shield4 hp with shieldshp reg: 11 11 11 00
                          CONSTANT shieldxdim, 18            ; shield x dimension is 24 pixels
                          CONSTANT shieldydim, 14            ; shield y dimension is 20 pixels
                          CONSTANT shield1x, 10              ; shield 1 starts at x = 16
                          CONSTANT shield2x, 52              ; shield 2 starts at x = 82
                          CONSTANT shield3x, 95              ; shield 3 starts at x = 149
                          CONSTANT shield4x, D7              ; shield 4 starts at x = 215
-                         CONSTANT shieldy, E0               ; shield starts at y = 224
+                         CONSTANT shieldy, D0               ; shield starts at y = 208
                          CONSTANT alien_x, 00               ; scratchpad memory location
                          CONSTANT alien_y, 01
                          CONSTANT alien_1_hp, 02
@@ -170,6 +176,7 @@
                          LOAD gs_tankx, zero                ; doesn't really matter
                          LOAD gs_tbulletdy, zero            ; doesn't really matter
                          LOAD tbullet_en, zero              ; start with top button not pressed
+                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -235,6 +242,7 @@
                          LOAD gs_tbullety, scratch
                          LOAD gs_major, gs_major_playing
                          LOAD gs_minor, gs_minor_begins
+                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -251,21 +259,180 @@
                          CALL NZ, load_tbullet_en           ; if it was, enable bullet enable
                          COMPARE tbullet_en, zero           ; check if bullet enable is enabled
                          CALL NZ, upd_tbullet               ; if it is, update shot bullet position
-                         CALL upd_aliens
+                         COMPARE shieldshp, FF              ; check if shields hp is depleted
+                         CALL NZ, upd_shields               ; if it is, stop updating shields
+                         CALL upd_aliens                    ; update aliens
+                         ADD gs_minor, one
                          RETURN 
              upd_aliens: 
-                         FETCH scratch, alien_x             ; store alien x position to scratch
-                         COMPARE scratch, 87                ; compare and check if at end
-                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         FETCH scratch, alien_x
                          COMPARE scratch, 00
                          CALL Z, upd_aliens_y               ; if at end add one to y position
+                         FETCH scratch, alien_1_hp          ;left shift aliens if left side is dystroyed
+                         TEST scratch, 01
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, 01
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, 01
+                         CALL Z, alien_hp_shift
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, FE
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, FE
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, FE
+                         JUMP Z, upd_aliens_y_7
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, FC
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, FC
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, FC
+                         JUMP Z, upd_aliens_y_6
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, F8
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, F8
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, F8
+                         JUMP Z, upd_aliens_y_5
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, F0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, F0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, F0
+                         JUMP Z, upd_aliens_y_4
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, E0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, E0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, E0
+                         JUMP Z, upd_aliens_y_3
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, C0
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, C0
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, C0
+                         JUMP Z, upd_aliens_y_2
+                         FETCH scratch, alien_1_hp
+                         TEST scratch, 80
+                         FETCH scratch, alien_2_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_3_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_4_hp
+                         TESTCY scratch, 80
+                         FETCH scratch, alien_5_hp
+                         TESTCY scratch, 80
+                         JUMP Z, upd_aliens_y_1
+                         JUMP upd_aliens_y_0
+        upd_aliens_cont: 
                          FETCH scratch, alien_y
                          TEST scratch, 01
                          CALL NC, upd_aliens_x_left
                          CALL C, upd_aliens_x_right
                          FETCH scratch, alien_y
                          COMPARE scratch, BE
-                         CALL Z, goto_gameend               ; end the game if aliens reach end
+                         JUMP Z, goto_gameend
+                         FETCH scratch, alien_1_hp
+                         COMPARE scratch, 00
+                         FETCH scratch, alien_2_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_3_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_4_hp
+                         COMPARECY scratch, 00
+                         FETCH scratch, alien_5_hp
+                         COMPARECY scratch, 00
+                         JUMP Z, goto_gameend               ; end the game if aliens reach end
+                         RETURN 
+         upd_aliens_y_0: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 87                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_1: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 97                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_2: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, A7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_3: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, B7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_4: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, C7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_5: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, D7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_6: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, E7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         upd_aliens_y_7: 
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, F7                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
+                         JUMP upd_aliens_cont
+         alien_hp_shift: 
+                         FETCH scratch, alien_1_hp
+                         SR0 scratch
+                         STORE scratch, alien_1_hp
+                         FETCH scratch, alien_2_hp
+                         SR0 scratch
+                         STORE scratch, alien_2_hp
+                         FETCH scratch, alien_3_hp
+                         SR0 scratch
+                         STORE scratch, alien_3_hp
+                         FETCH scratch, alien_4_hp
+                         SR0 scratch
+                         STORE scratch, alien_4_hp
+                         FETCH scratch, alien_5_hp
+                         SR0 scratch
+                         STORE scratch, alien_5_hp
                          RETURN 
      upd_aliens_x_right: 
                          FETCH scratch, alien_x             ; store alien x position to scratch
@@ -321,6 +488,8 @@
                          RETURN C                           ; needed for some reason I do not know... yet
                          SUB gs_tbullety, one
                          JUMP Z, reset_tbullet
+                         COMPARE shieldshp, FF
+                         JUMP Z, restart_upd_bullet_loop
                          COMPARE gs_tbullety, shieldy
                          JUMP Z, check_shield
                          FETCH scratch, alien_y
@@ -936,41 +1105,259 @@ restart_upd_bullet_loop:
                          COMPARE gs_tbulletx, scratch
                          JUMP C, check_shield4
                          JUMP restart_upd_bullet_loop
-          check_shield1: ; check if the bullet hit shield 1
-                         LOAD scratch, shield1x
+          check_shield1: ; checks if the bullet hit shield 1
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 1 HP is depleted
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield1x             ; checks bulletx with left game edge
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield1x
+                         LOAD scratch, shield1x             ; checks bulletx with shield 1
                          ADD scratch, shieldxdim
                          COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+                         JUMP NC, shield1_hit               ; if hit, update shield 1 and bullet
+          check_shield2: ; checks if the bullet hit shield 2
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 2 HP is depleted
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield2x             ; checks bulletx with gap between shield 1 and shield 2
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield2x             ; checks bulletx with shield 2
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield2_hit               ; if hit, update shield 2 and bullet
+          check_shield3: ; checks if the bullet hit shield 3
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 3 HP is depleted
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield3x             ; checks bulletx with gap between shield 2 and shield 3
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield3x             ; checks bulletx with shield 3
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield3_hit               ; if hit, update shield 3 and bullet
+          check_shield4: ; checks if the bullet hit shield 4
+                         LOAD scratch, shieldshp            ; disregard shield check if shield 4 HP is depleted
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         JUMP Z, restart_upd_bullet_loop
+                         LOAD scratch, shield4x             ; checks bulletx with gap between shield 3 and shield 4
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
+                         LOAD scratch, shield4x             ; checks bulletx with shield 4
+                         ADD scratch, shieldxdim
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, shield4_hit               ; if hit, update shield 4 and bullet
+            shield1_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 1 HP is depleted
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield1hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield2_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 2 HP is depleted
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield2hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield3_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 3 HP is depleted
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield3hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            shield4_hit: 
+                         LOAD scratch, shieldshp            ; check if shield 4 HP is depleted
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         JUMP Z, reset_tbullet
+                         LOAD scratch, shield4hit
+                         ADD shieldshp, scratch
+                         JUMP reset_tbullet
+            upd_shields: 
+                         LOAD scratch, shieldshp
+                         OR scratch, shield1dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield1_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield2dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield2_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield3dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield3_full
+                         LOAD scratch, shieldshp
+                         OR scratch, shield4dead_test
+                         XOR scratch, FF
+                         CALL NZ, draw_shield4_full
                          RETURN 
-          check_shield2: ; check if the bullet hit shield 2
-                         LOAD scratch, shield2x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield2x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+      draw_shield1_full: 
+                         LOAD xpos, shield1x                ; draw shield 1
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield1x                ; draw shield 1 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 2
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 3
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 4
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 5
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield1x                ; draw shield 1 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
                          RETURN 
-          check_shield3: ; check if the bullet hit shield 3
-                         LOAD scratch, shield3x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield3x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+      draw_shield2_full: 
+                         LOAD xpos, shield2x                ; draw shield 2
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield2x                ; draw shield 2 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 2
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 3
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 4
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 5
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield2x                ; draw shield 2 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
                          RETURN 
-          check_shield4: ; check if the bullet hit shield 4
-                         LOAD scratch, shield4x
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield4x
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, reset_tbullet
+      draw_shield3_full: 
+                         LOAD xpos, shield3x                ; draw shield 3
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield3x                ; draw shield 3 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 2
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 3
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 4
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 5
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield3x                ; draw shield 3 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
+                         RETURN 
+      draw_shield4_full: 
+                         LOAD xpos, shield4x                ; draw shield 4
+                         LOAD ypos, shieldy
+                         CALL moveto
+                         LOAD xpos, shield4x                ; draw shield 4 side 1
+                         LOAD ypos, shieldy
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 2
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         SUB ypos, shieldydim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 3
+                         LOAD ypos, shieldy
+                         ADD xpos, shieldxdim
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 4
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 5
+                         LOAD ypos, shieldy
+                         ADD xpos, 0F
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 6
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         SUB ypos, 06
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 7
+                         LOAD ypos, shieldy
+                         ADD xpos, 09
+                         CALL drawto
+                         LOAD xpos, shield4x                ; draw shield 4 side 8
+                         LOAD ypos, shieldy
+                         CALL drawto
                          RETURN 
            calc_gameend: 
                          COMPARE gs_minor, gs_minor_onesec
@@ -1129,164 +1516,6 @@ restart_upd_bullet_loop:
                          LOAD xpos, gs_tankx
                          LOAD ypos, gs_tanky
                          CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield1x                ; draw shield 1 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield1x                ; draw shield 1 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield2x                ; draw shield 2 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield2x                ; draw shield 2 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield3x                ; draw shield 3 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield3x                ; draw shield 3 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4
-                         LOAD ypos, shieldy
-                         CALL moveto
-                         LOAD xpos, shield4x                ; draw shield 4 side 1
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 2
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 3
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 09
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 4
-                         LOAD ypos, shieldy
-                         SUB ypos, 0E
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 5
-                         LOAD ypos, shieldy
-                         SUB ypos, shieldydim
-                         ADD xpos, 0F
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 6
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         SUB ypos, shieldydim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 7
-                         LOAD ypos, shieldy
-                         ADD xpos, shieldxdim
-                         CALL drawto
-                         LOAD xpos, shield4x                ; draw shield 4 side 8
-                         LOAD ypos, shieldy
-                         CALL drawto
-                         CALL draw_alien_1
-                         RETURN 
            draw_alien_1: 
                          FETCH scratch, alien_1_hp
                          TEST scratch, 01
