@@ -308,7 +308,7 @@ upd_aliens:
 		COMPARE scratch, 00
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		
-		FETCH scratch, alien_1_hp				;left shift aliens if left side is dystroyed
+		FETCH scratch, alien_1_hp				;left shift aliens if left side is destroyed
 		TEST scratch, 01
 		FETCH scratch, alien_2_hp
 		TESTCY scratch, 01
