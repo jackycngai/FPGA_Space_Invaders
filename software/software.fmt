@@ -70,15 +70,15 @@
                          CONSTANT gs_tank_xdim, 10          ; it's this plus 1
                          CONSTANT gs_tank_ydim, 08          ; it's this plus 1
                          CONSTANT gs_tank_speed, 02         ; pixels per frame
-                         NAMEREG s6, shieldshp              ; full health register counter for 4 shields: 00 00 00 00
+                         NAMEREG s6, shieldshp              ; full health register counter for 4 shields: 11 11 11 11
                          CONSTANT shield1hit, 40            ; add 01 from shieldshp when shield 1 is hit: 01 00 00 00
                          CONSTANT shield2hit, 10            ; add 01 from shieldshp when shield 2 is hit: 00 01 00 00
                          CONSTANT shield3hit, 04            ; add 01 from shieldshp when shield 3 is hit: 00 00 01 00
                          CONSTANT shield4hit, 01            ; add 01 from shieldshp when shield 4 is hit: 00 00 00 01
-                         CONSTANT shield1dead_test, 3F      ; used to test shield1 hp with shieldshp reg: 00 11 11 11
-                         CONSTANT shield2dead_test, CF      ; used to test shield2 hp with shieldshp reg: 11 00 11 11
-                         CONSTANT shield3dead_test, F3      ; used to test shield3 hp with shieldshp reg: 11 11 00 11
-                         CONSTANT shield4dead_test, FC      ; used to test shield4 hp with shieldshp reg: 11 11 11 00
+                         CONSTANT shield1dead_test, C0      ; used to test shield1 hp with shieldshp reg: 11 00 00 00
+                         CONSTANT shield2dead_test, 30      ; used to test shield2 hp with shieldshp reg: 00 11 00 00
+                         CONSTANT shield3dead_test, 0C      ; used to test shield3 hp with shieldshp reg: 00 00 11 00
+                         CONSTANT shield4dead_test, 03      ; used to test shield4 hp with shieldshp reg: 00 00 00 00
                          CONSTANT shieldxdim, 18            ; shield x dimension is 24 pixels
                          CONSTANT shieldydim, 14            ; shield y dimension is 20 pixels
                          CONSTANT shield1x, 10              ; shield 1 starts at x = 16
@@ -176,7 +176,7 @@
                          LOAD gs_tbullety, zero             ; doesn't really matter
                          LOAD gs_tankx, zero                ; doesn't really matter
                          LOAD tbullet_en, zero              ; start with top button not pressed
-                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
+                         LOAD shieldshp, FF                 ; start shieldshp as 11 11 11 11
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -242,7 +242,7 @@
                          LOAD gs_tbullety, scratch
                          LOAD gs_major, gs_major_playing
                          LOAD gs_minor, gs_minor_begins
-                         LOAD shieldshp, zero               ; start shieldshp as 00 00 00 00
+                         LOAD shieldshp, FF                 ; start shieldshp as 11 11 11 11
                          LOAD scratch, zero                 ; loads zero to scratch
                          STORE scratch, alien_x             ; aliens start at 0,0
                          STORE scratch, alien_y             ; aliens start at 0,0
@@ -259,8 +259,7 @@
                          CALL NZ, load_tbullet_en           ; if it was, enable bullet enable
                          COMPARE tbullet_en, zero           ; check if bullet enable is enabled
                          CALL NZ, upd_tbullet               ; if it is, update shot bullet position
-                         COMPARE shieldshp, FF              ; check if shields hp is depleted
-                         CALL NZ, upd_shields               ; if it is, stop updating shields
+                         CALL upd_shields                   ; updating shields
                          TEST gs_minor, 01
                          CALL C, upd_aliens                 ; update aliens
                          ADD gs_minor, one
@@ -357,7 +356,9 @@
                          FETCH scratch, alien_5_hp
                          TESTCY scratch, 80
                          JUMP Z, upd_aliens_y_1
-                         JUMP upd_aliens_y_0
+                         FETCH scratch, alien_x             ; store alien x position to scratch
+                         COMPARE scratch, 85                ; compare and check if at end
+                         CALL Z, upd_aliens_y               ; if at end add one to y position
         upd_aliens_cont: 
                          FETCH scratch, alien_y
                          TEST scratch, 01
@@ -378,11 +379,6 @@
                          COMPARECY scratch, 00
                          JUMP Z, goto_gameend               ; end the game if aliens reach end
                          RETURN 
-         upd_aliens_y_0: 
-                         FETCH scratch, alien_x             ; store alien x position to scratch
-                         COMPARE scratch, 85                ; compare and check if at end
-                         CALL Z, upd_aliens_y               ; if at end add one to y position
-                         JUMP upd_aliens_cont
          upd_aliens_y_1: 
                          FETCH scratch, alien_x             ; store alien x position to scratch
                          COMPARE scratch, 95                ; compare and check if at end
@@ -507,8 +503,6 @@
                          ADD scratch, 08
                          COMPARE gs_tbullety, scratch
                          JUMP Z, check_alien_5_hp
-                         COMPARE shieldshp, FF
-                         JUMP Z, restart_upd_bullet_loop
                          COMPARE gs_tbullety, shieldy
                          JUMP Z, check_shield
 restart_upd_bullet_loop: 
@@ -529,50 +523,43 @@ restart_upd_bullet_loop:
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_1
-                         FETCH scratch, alien_x
-                         ADD scratch, 10
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_2
-                         FETCH scratch, alien_x
-                         ADD scratch, 20
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_3
-                         FETCH scratch, alien_x
-                         ADD scratch, 30
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_4
-                         FETCH scratch, alien_x
-                         ADD scratch, 40
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_5
-                         FETCH scratch, alien_x
-                         ADD scratch, 50
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_6
-                         FETCH scratch, alien_x
-                         ADD scratch, 60
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_5_hp_7
-                         FETCH scratch, alien_x
-                         ADD scratch, 70
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
@@ -642,50 +629,43 @@ restart_upd_bullet_loop:
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_1
-                         FETCH scratch, alien_x
-                         ADD scratch, 10
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_2
-                         FETCH scratch, alien_x
-                         ADD scratch, 20
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_3
-                         FETCH scratch, alien_x
-                         ADD scratch, 30
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_4
-                         FETCH scratch, alien_x
-                         ADD scratch, 40
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_5
-                         FETCH scratch, alien_x
-                         ADD scratch, 50
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_6
-                         FETCH scratch, alien_x
-                         ADD scratch, 60
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_4_hp_7
-                         FETCH scratch, alien_x
-                         ADD scratch, 70
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
@@ -755,50 +735,43 @@ restart_upd_bullet_loop:
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_1
-                         FETCH scratch, alien_x
-                         ADD scratch, 10
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_2
-                         FETCH scratch, alien_x
-                         ADD scratch, 20
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_3
-                         FETCH scratch, alien_x
-                         ADD scratch, 30
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_4
-                         FETCH scratch, alien_x
-                         ADD scratch, 40
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_5
-                         FETCH scratch, alien_x
-                         ADD scratch, 50
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_6
-                         FETCH scratch, alien_x
-                         ADD scratch, 60
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_3_hp_7
-                         FETCH scratch, alien_x
-                         ADD scratch, 70
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
@@ -868,50 +841,43 @@ restart_upd_bullet_loop:
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_1
-                         FETCH scratch, alien_x
-                         ADD scratch, 10
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_2
-                         FETCH scratch, alien_x
-                         ADD scratch, 20
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_3
-                         FETCH scratch, alien_x
-                         ADD scratch, 30
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_4
-                         FETCH scratch, alien_x
-                         ADD scratch, 40
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_5
-                         FETCH scratch, alien_x
-                         ADD scratch, 50
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_6
-                         FETCH scratch, alien_x
-                         ADD scratch, 60
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_2_hp_7
-                         FETCH scratch, alien_x
-                         ADD scratch, 70
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
@@ -981,50 +947,43 @@ restart_upd_bullet_loop:
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_1
-                         FETCH scratch, alien_x
-                         ADD scratch, 10
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_2
-                         FETCH scratch, alien_x
-                         ADD scratch, 20
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_3
-                         FETCH scratch, alien_x
-                         ADD scratch, 30
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_4
-                         FETCH scratch, alien_x
-                         ADD scratch, 40
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_5
-                         FETCH scratch, alien_x
-                         ADD scratch, 50
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_6
-                         FETCH scratch, alien_x
-                         ADD scratch, 60
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, check_alien_1_hp_7
-                         FETCH scratch, alien_x
-                         ADD scratch, 70
+                         ADD scratch, 06
                          COMPARE scratch, gs_tbulletx
                          JUMP NC, restart_upd_bullet_loop
                          ADD scratch, alien_x_dim
@@ -1089,118 +1048,58 @@ restart_upd_bullet_loop:
                          JUMP reset_tbullet
            check_shield: ; check which shield region the bullet is in
                          LOAD scratch, shield1x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
                          ADD scratch, shieldxdim
-                         COMPARE gs_tbulletx, scratch
-                         JUMP C, check_shield1
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_shield1
                          LOAD scratch, shield2x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
                          ADD scratch, shieldxdim
-                         COMPARE gs_tbulletx, scratch
-                         JUMP C, check_shield2
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_shield2
                          LOAD scratch, shield3x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
                          ADD scratch, shieldxdim
-                         COMPARE gs_tbulletx, scratch
-                         JUMP C, check_shield3
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_shield3
                          LOAD scratch, shield4x
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, restart_upd_bullet_loop
                          ADD scratch, shieldxdim
-                         COMPARE gs_tbulletx, scratch
-                         JUMP C, check_shield4
+                         COMPARE scratch, gs_tbulletx
+                         JUMP NC, check_shield4
                          JUMP restart_upd_bullet_loop
           check_shield1: ; checks if the bullet hit shield 1
-                         LOAD scratch, shieldshp            ; disregard shield check if shield 1 HP is depleted
-                         OR scratch, shield1dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield1dead_test   ; disregard shield check if shield 1 HP is depleted
                          JUMP Z, restart_upd_bullet_loop
-                         LOAD scratch, shield1x             ; checks bulletx with left game edge
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield1x             ; checks bulletx with shield 1
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, shield1_hit               ; if hit, update shield 1 and bullet
+                         SUB shieldshp, shield1hit
+                         JUMP reset_tbullet
           check_shield2: ; checks if the bullet hit shield 2
-                         LOAD scratch, shieldshp            ; disregard shield check if shield 2 HP is depleted
-                         OR scratch, shield2dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield2dead_test   ; disregard shield check if shield 1 HP is depleted
                          JUMP Z, restart_upd_bullet_loop
-                         LOAD scratch, shield2x             ; checks bulletx with gap between shield 1 and shield 2
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield2x             ; checks bulletx with shield 2
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, shield2_hit               ; if hit, update shield 2 and bullet
+                         SUB shieldshp, shield2hit
+                         JUMP reset_tbullet
           check_shield3: ; checks if the bullet hit shield 3
-                         LOAD scratch, shieldshp            ; disregard shield check if shield 3 HP is depleted
-                         OR scratch, shield3dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield3dead_test   ; disregard shield check if shield 1 HP is depleted
                          JUMP Z, restart_upd_bullet_loop
-                         LOAD scratch, shield3x             ; checks bulletx with gap between shield 2 and shield 3
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield3x             ; checks bulletx with shield 3
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, shield3_hit               ; if hit, update shield 3 and bullet
+                         SUB shieldshp, shield3hit
+                         JUMP reset_tbullet
           check_shield4: ; checks if the bullet hit shield 4
-                         LOAD scratch, shieldshp            ; disregard shield check if shield 4 HP is depleted
-                         OR scratch, shield4dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield4dead_test   ; disregard shield check if shield 1 HP is depleted
                          JUMP Z, restart_upd_bullet_loop
-                         LOAD scratch, shield4x             ; checks bulletx with gap between shield 3 and shield 4
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, restart_upd_bullet_loop
-                         LOAD scratch, shield4x             ; checks bulletx with shield 4
-                         ADD scratch, shieldxdim
-                         COMPARE scratch, gs_tbulletx
-                         JUMP NC, shield4_hit               ; if hit, update shield 4 and bullet
-            shield1_hit: 
-                         LOAD scratch, shieldshp            ; check if shield 1 HP is depleted
-                         OR scratch, shield1dead_test
-                         XOR scratch, FF
-                         JUMP Z, reset_tbullet
-                         LOAD scratch, shield1hit
-                         ADD shieldshp, scratch
-                         JUMP reset_tbullet
-            shield2_hit: 
-                         LOAD scratch, shieldshp            ; check if shield 2 HP is depleted
-                         OR scratch, shield2dead_test
-                         XOR scratch, FF
-                         JUMP Z, reset_tbullet
-                         LOAD scratch, shield2hit
-                         ADD shieldshp, scratch
-                         JUMP reset_tbullet
-            shield3_hit: 
-                         LOAD scratch, shieldshp            ; check if shield 3 HP is depleted
-                         OR scratch, shield3dead_test
-                         XOR scratch, FF
-                         JUMP Z, reset_tbullet
-                         LOAD scratch, shield3hit
-                         ADD shieldshp, scratch
-                         JUMP reset_tbullet
-            shield4_hit: 
-                         LOAD scratch, shieldshp            ; check if shield 4 HP is depleted
-                         OR scratch, shield4dead_test
-                         XOR scratch, FF
-                         JUMP Z, reset_tbullet
-                         LOAD scratch, shield4hit
-                         ADD shieldshp, scratch
+                         SUB shieldshp, shield4hit
                          JUMP reset_tbullet
             upd_shields: 
-                         LOAD scratch, shieldshp
-                         OR scratch, shield1dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield1dead_test
                          CALL NZ, draw_shield1_full
-                         LOAD scratch, shieldshp
-                         OR scratch, shield2dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield2dead_test
                          CALL NZ, draw_shield2_full
-                         LOAD scratch, shieldshp
-                         OR scratch, shield3dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield3dead_test
                          CALL NZ, draw_shield3_full
-                         LOAD scratch, shieldshp
-                         OR scratch, shield4dead_test
-                         XOR scratch, FF
+                         TEST shieldshp, shield4dead_test
                          CALL NZ, draw_shield4_full
                          RETURN 
       draw_shield1_full: 
