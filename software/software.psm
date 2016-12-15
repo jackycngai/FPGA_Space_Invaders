@@ -14,6 +14,7 @@
 ;;			   1.4 - completion of shield hit detection and bullet reset
 ;;			   1.5 - added in shield health, with full/dead shield models
 ;;			   2.0 - merged with alien code
+;;			   2.1 - merged with space invaders logo, cleaned up code
 ;;============================================================================
 
 ;;============================================================================
@@ -72,7 +73,6 @@ CONSTANT gs_minor_getrdy , 1e ; frame count about 0.5 secs
 
 NAMEREG s2, gs_tbulletx
 NAMEREG s3, gs_tbullety
-NAMEREG s4, gs_tbulletdy
 CONSTANT gs_tbullet_xdim , 00 ; it's this plus 1
 CONSTANT gs_tbullet_ydim , 05 ; it's this plus 1
 CONSTANT gs_tbullet_speed, 08 ; pixels per frame
@@ -107,8 +107,8 @@ CONSTANT alien_2_hp      , 03
 CONSTANT alien_3_hp      , 04
 CONSTANT alien_4_hp      , 05
 CONSTANT alien_5_hp      , 06
-CONSTANT alien_x_dim     , 08
-CONSTANT alien_y_dim     , 02
+CONSTANT alien_x_dim     , 0a
+CONSTANT alien_y_dim     , 04
 
 ;;============================================================================
 ;; Global variables.
@@ -117,6 +117,7 @@ CONSTANT alien_y_dim     , 02
 NAMEREG s7, resvd1            ; reserved
 NAMEREG s8, resvd2            ; reserved
 NAMEREG sC, resvd3            ; reserved
+NAMEREG s4, resvd4            ; reserved
 
 NAMEREG s9, xpos              ; for drawing routines
 NAMEREG sA, ypos              ; for drawing routines
@@ -203,7 +204,6 @@ gs_init:
 		LOAD gs_tbulletx, zero					; doesn't really matter
 		LOAD gs_tbullety, zero					; doesn't really matter
 		LOAD gs_tankx, zero					; doesn't really matter
-		LOAD gs_tbulletdy, zero				; doesn't really matter
 		LOAD tbullet_en, zero					; start with top button not pressed
 		LOAD shieldshp, zero					; start shieldshp as 00 00 00 00
 		LOAD scratch, zero						; loads zero to scratch
@@ -429,42 +429,42 @@ upd_aliens_cont:
 
 upd_aliens_y_0:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, 87					; compare and check if at end
+		COMPARE scratch, 85					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_1:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, 97					; compare and check if at end
+		COMPARE scratch, 95					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_2:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, A7					; compare and check if at end
+		COMPARE scratch, A5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_3:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, B7					; compare and check if at end
+		COMPARE scratch, B5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_4:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, C7					; compare and check if at end
+		COMPARE scratch, C5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_5:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, D7					; compare and check if at end
+		COMPARE scratch, D5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_6:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, E7					; compare and check if at end
+		COMPARE scratch, E5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 upd_aliens_y_7:
 		FETCH scratch, alien_x					; store alien x position to scratch
-		COMPARE scratch, F7					; compare and check if at end
+		COMPARE scratch, F5					; compare and check if at end
 		CALL Z, upd_aliens_y					; if at end add one to y position
 		JUMP upd_aliens_cont
 		
@@ -548,24 +548,20 @@ upd_tbullet_loop:
 		JUMP Z, reset_tbullet
 		
 		FETCH scratch, alien_y
-		ADD scratch, 20
 		COMPARE gs_tbullety, scratch
-		JUMP Z, check_alien_5_hp
-		FETCH scratch, alien_y
-		ADD scratch, 18
-		COMPARE gs_tbullety, scratch
-		JUMP Z, check_alien_4_hp
-		FETCH scratch, alien_y
-		ADD scratch, 10
-		COMPARE gs_tbullety, scratch
-		JUMP Z, check_alien_3_hp
-		FETCH scratch, alien_y
+		JUMP Z, check_alien_1_hp
 		ADD scratch, 08
 		COMPARE gs_tbullety, scratch
 		JUMP Z, check_alien_2_hp
-		FETCH scratch, alien_y
+		ADD scratch, 08
 		COMPARE gs_tbullety, scratch
-		JUMP Z, check_alien_1_hp
+		JUMP Z, check_alien_3_hp
+		ADD scratch, 08
+		COMPARE gs_tbullety, scratch
+		JUMP Z, check_alien_4_hp
+		ADD scratch, 08
+		COMPARE gs_tbullety, scratch
+		JUMP Z, check_alien_5_hp
 		
 		COMPARE shieldshp, ff
 		JUMP Z, restart_upd_bullet_loop
@@ -1783,29 +1779,19 @@ draw_playing:
 		LOAD xpos, gs_tbulletx	; draw bullet
 		LOAD ypos, gs_tbullety
 		CALL moveto
-		LOAD xpos, gs_tbulletx
-		LOAD ypos, gs_tbullety
 		ADD ypos, gs_tbullet_ydim
 		CALL drawto
 		
 		LOAD xpos, gs_tankx	; draw tank
 		LOAD ypos, gs_tanky
 		CALL moveto
-		LOAD xpos, gs_tankx
-		LOAD ypos, gs_tanky
 		ADD ypos, gs_tank_ydim
 		CALL drawto
-		LOAD xpos, gs_tankx
-		LOAD ypos, gs_tanky
-		ADD xpos, gs_tank_xdim
-		ADD ypos, gs_tank_ydim
-		CALL drawto
-		LOAD xpos, gs_tankx
-		LOAD ypos, gs_tanky
 		ADD xpos, gs_tank_xdim
 		CALL drawto
-		LOAD xpos, gs_tankx
-		LOAD ypos, gs_tanky
+		SUB ypos, gs_tank_ydim
+		CALL drawto
+		SUB xpos, gs_tank_xdim
 		CALL drawto
 		
 draw_alien_1:
@@ -2252,58 +2238,43 @@ draw_gameend:
 		LOAD xpos, 48			; draw letter d
 		LOAD ypos, 50
 		CALL moveto
-		LOAD xpos, 48
 		LOAD ypos, 90
 		CALL drawto
 		LOAD xpos, 28
-		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, 28
 		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, 48
-		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, 58			; draw letter o
 		LOAD ypos, 70
 		CALL moveto
-		LOAD xpos, 58
 		LOAD ypos, 90
 		CALL drawto
 		LOAD xpos, 78
-		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, 78
 		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, 58
-		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, 88			; draw letter n
 		LOAD ypos, 90
 		CALL moveto
-		LOAD xpos, 88
 		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, a8
-		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, a8
 		LOAD ypos, 90
 		CALL drawto
 		LOAD xpos, d8			; draw letter e
-		LOAD ypos, 90
 		CALL moveto
 		LOAD xpos, b8
 		LOAD ypos, 90
 		CALL drawto
-		LOAD xpos, b8
 		LOAD ypos, 70
 		CALL drawto
 		LOAD xpos, d8
-		LOAD ypos, 70
 		CALL drawto
-		LOAD xpos, b8
 		LOAD ypos, 90
 		CALL drawto
 		RETURN
